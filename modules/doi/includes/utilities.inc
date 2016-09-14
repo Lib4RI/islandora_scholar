@@ -6,38 +6,15 @@
  */
 
 /**
- * Get the DOI name for the given url.
- *
- * @param string $doi_url
- *   A DOI url, or a DOI name with or without the "doi:" prefix. If the $url
- *   is a CrossRef ID passed in as doi:10.1016/j.tiv.2011.10.017 or
- *   10.1111/eve.12339 it will not get changed by running it through parse_url.
- *
- * @return string
- *   A string containing the DOI name.
- */
-function islandora_doi_get_doi_name_from_url($doi_url) {
-  // Allows for DOI to be entered in the following formats: 10.1111/eva.12339,
-  // http://dx.doi.org/10.1111/eva.12339, http://doi.org/10.1111/eva.12339,
-  // or doi:10.1111/eva.12339. Removing whitespace before parsing the url and
-  // then removing any trailing "/" from the returned path.
-  $doi_name = trim(parse_url(trim($doi_url), PHP_URL_PATH), '/');
-  return $doi_name;
-}
-
-/**
  * Perform a request to CrossRef for the given ID.
  *
- * @param string $id_or_url
- *   A DOI to lookop. May be provided with or without the "doi:" prefix. Can
- *   also pass a full DOI url (i.e, http://doi.org/10.1111/eva.12339 ).
+ * @param string $id
+ *   A DOI to lookop. May be provided with or without the "doi:" prefix.
  *
  * @return object
  *   An object as provided by drupal_http_request().
  */
-function islandora_doi_perform_request($id_or_url) {
-  // Allows for $id to pass a DOI url string or the DOI name.
-  $id = islandora_doi_get_doi_name_from_url($id_or_url);
+function islandora_doi_perform_request($id) {
   $openurl = variable_get('islandora_doi_openurl', 'http://www.crossref.org/openurl');
   $openurl_pid = variable_get('islandora_doi_openurl_pid', 'user@example.com');
   $url = url($openurl, array(
@@ -66,43 +43,7 @@ function islandora_doi_transform_to_mods(SimpleXMLElement $doi_xml) {
   // @todo Implement book support.
   foreach ($doi_xml->doi_record as $record) {
     foreach ($record->crossref as $crossref) {
-      foreach ($crossref->journal as $journal) {
-        foreach ($journal->journal_metadata as $metadata) {
-          $relateditem = $mods->addChild('relatedItem');
-          $relateditem->addAttribute('type', 'host');
-          foreach ($metadata->attributes() as $name => $item) {
-            switch ((string) $name) {
-              case 'language':
-                $language = (string) $item[0];
-            }
-          }
-          foreach ($metadata->children() as $name => $item) {
-            switch ((string) $name) {
-              case 'full_title':
-                $titleinfo = $relateditem->addChild('titleInfo');
-                $titleinfo->addChild('title', (string) $item);
-                break;
-
-              case 'abbrev_title':
-                $titleinfo = $relateditem->addChild('titleInfo');
-                $titleinfo->addAttribute('type', 'abbreviated');
-                $titleinfo->addChild('title', (string) $item);
-                break;
-
-              case 'issn':
-                $issn = $relateditem->addChild('identifier', (string) $item);
-                $issn->addAttribute('type', 'issn');
-                break;
-
-              case 'coden':
-                break;
-
-              case 'doi_data':
-                break;
-
-            }
-          }
-        }
+      foreach ($crossref->journal as $journal) {	  
         foreach ($journal->journal_issue as $issue) {
           foreach ($issue->children() as $name => $item) {
             switch ((string) $name) {
@@ -203,7 +144,8 @@ function islandora_doi_transform_to_mods(SimpleXMLElement $doi_xml) {
                       }
 
                       if ($affiliation) {
-                        $mods_name->addChild('affiliation', $affiliation);
+                        // HK, not required
+			//$mods_name->addChild('affiliation', $affiliation);
                       }
 
                       if ($suffix) {
@@ -295,13 +237,67 @@ function islandora_doi_transform_to_mods(SimpleXMLElement $doi_xml) {
             }
             $date_value .= "-" . $pubdate_day;
           }
-          $origin_info->addChild('dateIssued', $date_value);
+          $dateIssued = $origin_info->addChild('dateIssued', $date_value);
+		  $dateIssued->addAttribute('encoding', 'w3cdtf');
+		  $dateIssued->addAttribute('keyDate', 'yes');
         }
 
-        if (!empty($volume_number) || !empty($issue_number) || !empty($other_pages) || !empty($last_page) || !empty($first_page) || !empty($pubdate_year) || !empty($pubdate_month) || !empty($pubdate_day)) {
-          $part = $mods->addChild('part');
+		  /*Start test*/
+		 $relateditem = $mods->addChild('relatedItem');
+         $relateditem->addAttribute('type', 'host');
+		  
+		 foreach ($journal->journal_metadata as $metadata) {
+		            
+          foreach ($metadata->attributes() as $name => $item) {
+            switch ((string) $name) {
+              case 'language':
+                $language = (string) $item[0];
+            }
+          }
+          foreach ($metadata->children() as $name => $item) {
+            switch ((string) $name) {
+              case 'full_title':
+                $titleinfo = $relateditem->addChild('titleInfo');
+                $titleinfo->addChild('title', (string) $item);
+                break;
 
-          if (!empty($last_page) || !empty($first_page) || !empty($other_pages)) {
+              case 'abbrev_title':
+                $titleinfo = $relateditem->addChild('titleInfo');
+                $titleinfo->addAttribute('type', 'abbreviated');
+                $titleinfo->addChild('title', (string) $item);
+                break;
+
+              case 'issn':
+                $issn = $relateditem->addChild('identifier', (string) $item);
+		$media_type = (string) $item['media_type'];
+		if ($media_type == 'print'){
+			$issn->addAttribute('type', 'issn');
+		}
+		else {
+			$issn->addAttribute('type', 'e-issn');
+		}
+                /*$issn->addAttribute('type', 'issn');*/
+                break;
+				
+			  case 'e-issn':
+                $issn = $relateditem->addChild('identifier', (string) $item);
+                $issn->addAttribute('type', 'e-issn');
+                break;	
+
+              case 'coden':
+                break;
+
+              case 'doi_data':
+                break;
+            }								  		  
+          }			 		 		  		 
+        }
+		
+        if (!empty($volume_number) || !empty($issue_number) || !empty($other_pages) || !empty($last_page) || !empty($first_page) || !empty($pubdate_year) || !empty($pubdate_month) || !empty($pubdate_day)) {
+           /*HK: Added $part under relatedItem type host*/
+		  $part = $relateditem->addChild('part');
+
+          if (!empty($last_page) || !empty($first_page) || !empty($other_pages)) {		    
             $extent = $part->addChild('extent');
             $extent->addAttribute('unit', 'page');
             if (!empty($other_pages)) {
@@ -323,7 +319,7 @@ function islandora_doi_transform_to_mods(SimpleXMLElement $doi_xml) {
             $issue->addAttribute('type', 'issue');
             $issue->addChild('number', $issue_number);
           }
-          if (!empty($pubdate_year)) {
+          /*if (!empty($pubdate_year)) {
             $date_value = $pubdate_year;
             if (!empty($pubdate_month)) {
               if (strlen($pubdate_month) == 1) {
@@ -338,7 +334,7 @@ function islandora_doi_transform_to_mods(SimpleXMLElement $doi_xml) {
               $date_value .= "-" . $pubdate_day;
             }
             $part->addChild('date', $date_value);
-          }
+          }*/
 
         }
 

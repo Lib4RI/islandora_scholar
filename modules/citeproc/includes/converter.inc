@@ -132,15 +132,17 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'edition' => preg_replace('/[^0-9]/', '', convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:edition')),
       'event' => convert_mods_to_citeproc_json_event($mods),
       'event-place' => convert_mods_to_citeproc_json_event_place($mods),
-      // 'genre' => convert_mods_to_citeproc_json_genre($mods),
+      //'genre' => convert_mods_to_citeproc_json_genre($mods),
       'ISBN' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="isbn"]'),
-      'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:part/mods:detail[@type="volume"]/mods:number'),
-      'issue' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:part/mods:detail[@type="issue"]/mods:number'),
+      'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
+      'issue' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="issue"]/mods:number'),
       'note' => convert_mods_to_citeproc_json_note($mods),
       'number' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo/mods:partNumber'),
       'page' => convert_mods_to_citeproc_json_page($mods),
-      'publisher' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:publisher'),
-      'publisher-place' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm'),
+      //'publisher' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:publisher'),
+	  'publisher' => convert_mods_to_citeproc_json_publisher($mods),
+      //'publisher-place' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm'),
+	  'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
       'URL' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:location/mods:url'),
       'number-pmid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="accession"]'),
       'number-pmcid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="pmc"]'),
@@ -177,19 +179,76 @@ function convert_mods_to_citeproc_jsons($mods_in) {
 function convert_mods_to_citeproc_json_genre($mods) {
   $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
   switch (trim($genre)) {
-    case 'journal article':
+    case 'Journal Article':
       return 'article-journal';
 
-    case 'book chapter':
+    case 'Book Chapter':
     case 'book section':
       return 'chapter';
 
-    case 'book':
+    case 'Book':
+	case 'Edited Book':
       return 'book';
+	  
+	case 'Patent':
+		return 'patent';
 
+	case 'Newspaper or Magazine Article':
+		return 'article-newspaper';
+		
+	case 'Dissertation':
+	case 'Master Thesis':
+	case 'Bachelor Thesis':
+		return 'thesis';
+		
+	case 'Proceedings Paper':
+	case 'Other Conference Item':
+		return 'paper-conference';
+		
+	case 'Report':
+		return 'report';
+		
     default:
       return 'article-journal';
   }
+}
+
+/**
+ * Gets the page property for the Citation.
+ *
+ * @param SimpleXMLElement $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The page property for the Citation.
+ */
+function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
+  $publisher = '';
+  $publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:publisher'); 
+  
+  if (empty($publisher)) {
+    $publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:publisher');
+  }
+  return $publisher;
+}
+
+/**
+ * Gets the page property for the Citation.
+ *
+ * @param SimpleXMLElement $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The page property for the Citation.
+ */
+function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) {
+  $place = '';
+  $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]'); 
+  
+  if (empty($place)) {
+    $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
+  }
+  return $place;
 }
 
 /**
@@ -300,7 +359,7 @@ function convert_mods_to_citeproc_json_note(SimpleXMLElement $mods) {
  */
 function convert_mods_to_citeproc_json_page(SimpleXMLElement $mods) {
   $output = NULL;
-  $pages = $mods->xpath("//mods:mods[1]/mods:part/mods:extent[@unit='pages']");
+  $pages = $mods->xpath("//mods:mods[1]/mods:relatedItem[@type='host']/mods:part/mods:extent[@unit='page']");
   // Note: "pages" is correct, but Zotero uses "page".
   if (empty($pages)) {
     $pages = $mods->xpath("//mods:mods[1]/mods:part/mods:extent[@unit='page']");

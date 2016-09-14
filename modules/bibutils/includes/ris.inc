@@ -290,7 +290,7 @@ class RIS {
       $given = $names->xpath("mods:namePart[@type = 'given']");
       $family = $names->xpath("mods:namePart[@type = 'family']");
       if (!empty($given[0]) && !empty($family[0])) {
-        $this->text .= "$field  - {$family[0]}, {$given[0]}.\n";
+        $this->text .= "$field  - {$family[0]}, {$given[0]}\n";
       }
     }
   }
