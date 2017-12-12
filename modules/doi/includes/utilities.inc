@@ -95,9 +95,9 @@ function islandora_doi_transform_to_mods($doi_xml) {
 
   // Add metadata for journal articles.
   foreach ($doi_xml->getElementsByTagName('journal') as $journal) {
-    $genre = $mods->createElement('genre');
-    $genre->nodeValue = 'journal article';
-    $mods->firstChild->appendChild($genre);
+//    $genre = $mods->createElement('genre');
+//    $genre->nodeValue = 'article';
+//    $mods->firstChild->appendChild($genre);
 
     $relateditem = $mods->createElement('relatedItem');
     $mods->firstChild->appendChild($relateditem);
