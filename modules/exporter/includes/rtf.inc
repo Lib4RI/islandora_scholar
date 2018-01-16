@@ -368,8 +368,9 @@ class RTF {
    */
   public function parseDocument() {
     $doc_buffer = html_entity_decode($this->document, ENT_QUOTES, 'UTF-8');
-    $doc_buffer = utf8_decode($doc_buffer);
-    $doc_buffer = $this->specialCharacters($doc_buffer);
+//    $doc_buffer = utf8_decode($doc_buffer);
+//    $doc_buffer = $this->specialCharacters($doc_buffer);
+	$doc_buffer = $this->utf8_to_rtf($doc_buffer);
     if (preg_match("/<ul>(.*?)<\/ul>/mi", $doc_buffer)) {
       $doc_buffer = str_replace("<ul>", "", $doc_buffer);
       $doc_buffer = str_replace("</ul>", "", $doc_buffer);
@@ -405,6 +406,29 @@ class RTF {
     $doc_buffer = $this->nl2par($doc_buffer);
 
     return $doc_buffer;
+  }
+
+  /**
+   * Convert UTF8 to RTF taking in account for special characters
+   */
+  public function utf8_to_rtf($utf8_text) {
+    $utf8_patterns = array(
+		"/[\xC2-\xDF][\x80-\xBF]/",
+        "/[\xE0-\xEF][\x80-\xBF]{2}/",
+        "/[\xF0-\xF4][\x80-\xBF]{3}/",
+    );
+    $new_str = $utf8_text;
+    
+    
+    $new_str = preg_replace_callback($utf8_patterns,      
+								   function ($matches) {
+										foreach ($matches as $match){
+											return '\u'.hexdec(bin2hex(mb_convert_encoding("$match", 'UTF-16', 'UTF-8'))).'?';
+										}
+									},
+									$new_str);
+        
+    return $new_str;
   }
 
 }
