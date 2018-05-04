@@ -188,6 +188,7 @@ function convert_mods_to_citeproc_json_genre($mods) {
 
     case 'Book':
 	case 'Edited Book':
+	case 'Conference Proceedings':
       return 'book';
 	  
 	case 'Patent':
@@ -202,7 +203,7 @@ function convert_mods_to_citeproc_json_genre($mods) {
 		return 'thesis';
 		
 	case 'Proceedings Paper':
-	case 'Other Conference Item':
+	case 'Conference Item':
 		return 'paper-conference';
 		
 	case 'Report':
@@ -233,21 +234,17 @@ function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
 }
 
 /**
- * Gets the page property for the Citation.
+ * Gets the publication place.
  *
  * @param SimpleXMLElement $mods
  *   A MODS document.
  *
  * @return string
- *   The page property for the Citation.
+ *   The publication place property for the Citation.
  */
 function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) {
   $place = '';
-  $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]'); 
-  
-  if (empty($place)) {
-    $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
-  }
+  $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
   return $place;
 }
 
