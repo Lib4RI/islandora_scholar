@@ -244,7 +244,11 @@ function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
  */
 function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) {
   $place = '';
-  $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
+  $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]'); 
+  
+  if (empty($place)) {
+    $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
+  }
   return $place;
 }
 
@@ -293,14 +297,23 @@ function convert_mods_to_citeproc_json_title(SimpleXMLElement $mods) {
  *   The event property for the Citation.
  */
 function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
-  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:relatedItem/mods:titleInfo/mods:title');
-  // marcgt.
+  // new code (NK, 24.5.2018)
+  $property = $mods->xpath("//mods:mods[1]/mods:name[@type='conference']");
   if (isset($property)) {
     return $property;
   }
+
   else {
-    // zotero.
-    return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"]="conferencePaper"]/mods:relatedItem/mods:titleInfo/mods:title');
+    // code as it was before (NK, 24.5.2018)
+    $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:relatedItem/mods:titleInfo/mods:title');
+    // marcgt.
+    if (isset($property)) {
+      return $property;
+    }
+    else {
+      // zotero.
+      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"]="conferencePaper"]/mods:relatedItem/mods:titleInfo/mods:title');
+    }
   }
 }
 
@@ -314,14 +327,23 @@ function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
  *   The event-place property for the Citation.
  */
 function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods) {
-  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:originInfo/mods:place/mods:placeTerm');
-  // marcgt.
+  // new code (NK, 24.5.2018)
+  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]');
   if (isset($property)) {
     return $property;
   }
+  
   else {
-    // zotero.
-    return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"][text()="conferencePaper"]]/mods:originInfo/mods:place/mods:placeTerm');
+    // code as it was before (NK, 24.5.2018)
+    $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:originInfo/mods:place/mods:placeTerm');
+    // marcgt.
+    if (isset($property)) {
+      return $property;
+    }
+    else {
+      // zotero.
+      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"][text()="conferencePaper"]]/mods:originInfo/mods:place/mods:placeTerm');
+    }
   }
 }
 
