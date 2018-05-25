@@ -132,6 +132,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'edition' => preg_replace('/[^0-9]/', '', convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:edition')),
       'event' => convert_mods_to_citeproc_json_event($mods),
       'event-place' => convert_mods_to_citeproc_json_event_place($mods),
+      'event-date' => convert_mods_to_citeproc_json_event_date($mods), // new code (NK, 25.5.2018)
       //'genre' => convert_mods_to_citeproc_json_genre($mods),
       'ISBN' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="isbn"]'),
       'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
@@ -300,7 +301,7 @@ function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
   // new code (NK, 24.5.2018)
   $property = $mods->xpath("//mods:mods[1]/mods:name[@type='conference']");
   if (isset($property)) {
-    return $property;
+    return $property[0];
   }
 
   else {
@@ -344,6 +345,23 @@ function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods) {
       // zotero.
       return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"][text()="conferencePaper"]]/mods:originInfo/mods:place/mods:placeTerm');
     }
+  }
+}
+
+/**
+ * Gets the event-date property for the Citation.
+ *
+ * @param SimpleXMLElement $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The event-date property for the Citation.
+ */
+function convert_mods_to_citeproc_json_event_date(SimpleXMLElement $mods) {
+  // new code (NK, 24.5.2018)
+  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:dateOther[@type = "conferenceDate"]');
+  if (isset($property)) {
+    return $property;
   }
 }
 
