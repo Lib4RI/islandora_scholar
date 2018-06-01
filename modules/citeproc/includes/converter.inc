@@ -126,13 +126,13 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'title' => convert_mods_to_citeproc_json_title($mods),
       'abstract' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:abstract'),
       'call-number' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:classification'),
-      'collection-title' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:title'),
+      'collection-title' => convert_mods_to_citeproc_json_collection_title($mods),
       'container-title' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:titleInfo[not(@type)]/mods:title'),
       'DOI' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="doi"]'),
       'edition' => preg_replace('/[^0-9]/', '', convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:edition')),
       'event' => convert_mods_to_citeproc_json_event($mods),
       'event-place' => convert_mods_to_citeproc_json_event_place($mods),
-      'event-date' => convert_mods_to_citeproc_json_event_date($mods), // new code (NK, 25.5.2018)
+      'event-date' => convert_mods_to_citeproc_json_event_date($mods),
       //'genre' => convert_mods_to_citeproc_json_genre($mods),
       'ISBN' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="isbn"]'),
       'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
@@ -188,15 +188,16 @@ function convert_mods_to_citeproc_json_genre($mods) {
       return 'chapter';
 
     case 'Book':
-	case 'Edited Book':
-	case 'Conference Proceedings':
+    case 'Edited Book':
+    case 'Conference Proceedings':
+    case 'Brochure':
       return 'book';
 	  
-	case 'Patent':
-		return 'patent';
+    case 'Patent':
+      return 'patent';
 
-	case 'Newspaper or Magazine Article':
-		return 'article-newspaper';
+    case 'Newspaper or Magazine Article':
+      return 'article-newspaper';
 		
 	case 'Dissertation':
 	case 'Master Thesis':
@@ -235,7 +236,7 @@ function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
 }
 
 /**
- * Gets the publication place.
+ * Gets the publication place depending on the publication type.
  *
  * @param SimpleXMLElement $mods
  *   A MODS document.
@@ -243,16 +244,20 @@ function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
  * @return string
  *   The publication place property for the Citation.
  */
-function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) {
-  $place = '';
-  $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]'); 
-  
-  if (empty($place)) {
-    $place = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
+function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) { 
+  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+  switch (trim($genre)) {
+    case 'Book Chapter':
+    case 'Conference Item':
+	case 'Proceedings Paper':
+	  // for these publication types, the publication place info is contained in a related item type element:
+      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm');
+		
+    default:
+	  // for all other publication types, the publication type info is in the basic originInfo-place-placeTerm element:
+      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]'); 
   }
-  return $place;
 }
-
 /**
  * Gets the title property for the Citation.
  *
@@ -287,7 +292,30 @@ function convert_mods_to_citeproc_json_title(SimpleXMLElement $mods) {
   }
   return !empty($output) ? $output : NULL;
 }
-
+/**
+ * Gets the collection title property for the Citation.
+ *
+ * @param SimpleXMLElement $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The collection title property for the Citation.
+ */
+function convert_mods_to_citeproc_json_collection_title(SimpleXMLElement $mods) {
+  // look in the series element not embedded in any other element; should give the correct result for publication types like 'Book' where the publication is itself the entire entity:
+  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:title');
+  if (isset($property)) {
+    return $property;
+  }
+  
+  else {
+	// look in the series element embedded in a relatedItem-type-host element; should give the correct result for publication types like 'Book Chapter' where the publication is part of a bigger entity:
+	$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:title');
+	if (isset($property)) {
+	  return $property;
+	}
+  }
+}
 /**
  * Gets the event property for the Citation.
  *
@@ -328,26 +356,31 @@ function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
  *   The event-place property for the Citation.
  */
 function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods) {
-  // new code (NK, 24.5.2018)
   $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]');
   if (isset($property)) {
     return $property;
   }
   
   else {
-    // code as it was before (NK, 24.5.2018)
-    $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:originInfo/mods:place/mods:placeTerm');
-    // marcgt.
-    if (isset($property)) {
-      return $property;
-    }
-    else {
-      // zotero.
-      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"][text()="conferencePaper"]]/mods:originInfo/mods:place/mods:placeTerm');
-    }
+	$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo[@eventType = "conference"]/mods:place/mods:placeTerm[@type = "text"]');
+	if (isset($property)) {
+	  return $property;
+	}
+  
+	else {
+		// code as it was originally (NK, 24.5.2018)
+		$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:originInfo/mods:place/mods:placeTerm');
+		// marcgt.
+		if (isset($property)) {
+		  return $property;
+		}
+		else {
+		  // zotero.
+		  return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"][text()="conferencePaper"]]/mods:originInfo/mods:place/mods:placeTerm');
+		}
+	}
   }
 }
-
 /**
  * Gets the event-date property for the Citation.
  *
