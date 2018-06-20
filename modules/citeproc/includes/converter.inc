@@ -138,7 +138,8 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
       'issue' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="issue"]/mods:number'),
       'note' => convert_mods_to_citeproc_json_note($mods),
-      'number' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo/mods:partNumber'),
+      //'number' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo/mods:partNumber'),
+      'number' => convert_mods_to_citeproc_json_collection_seriesVolNumber($mods),
       'page' => convert_mods_to_citeproc_json_page($mods),
       //'publisher' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:publisher'),
 	  'publisher' => convert_mods_to_citeproc_json_publisher($mods),
@@ -255,7 +256,7 @@ function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) {
 		
     default:
 	  // for all other publication types, the publication type info is in the basic originInfo-place-placeTerm element:
-      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]'); 
+      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo[not(@eventType)]/mods:place/mods:placeTerm[@type = "text"]'); 
   }
 }
 /**
@@ -311,6 +312,30 @@ function convert_mods_to_citeproc_json_collection_title(SimpleXMLElement $mods) 
   else {
 	// look in the series element embedded in a relatedItem-type-host element; should give the correct result for publication types like 'Book Chapter' where the publication is part of a bigger entity:
 	$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:title');
+	if (isset($property)) {
+	  return $property;
+	}
+  }
+}
+/**
+ * Gets the series volume number property for the Citation.
+ *
+ * @param SimpleXMLElement $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The series volume number property for the Citation.
+ */
+function convert_mods_to_citeproc_json_collection_seriesVolNumber(SimpleXMLElement $mods) {
+  // look in the series element not embedded in any other element; should give the correct result for publication types like 'Book' where the publication is itself the entire entity:
+  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:partNumber');
+  if (isset($property)) {
+    return $property;
+  }
+  
+  else {
+	// look in the series element embedded in a relatedItem-type-host element; should give the correct result for publication types like 'Book Chapter' where the publication is part of a bigger entity:
+	$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:partNumber');
 	if (isset($property)) {
 	  return $property;
 	}
