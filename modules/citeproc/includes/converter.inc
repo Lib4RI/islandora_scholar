@@ -235,26 +235,36 @@ function convert_mods_to_citeproc_json_genre($mods) {
       return 'article-journal';
   }
 }
-
 /**
- * Gets the page property for the Citation.
+ * Gets the publisher property for the Citation. In case of theses: the degree granting institution.
  *
  * @param SimpleXMLElement $mods
  *   A MODS document.
  *
  * @return string
- *   The page property for the Citation.
+ *   The publisher property for the Citation.
  */
 function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
   $publisher = '';
-  $publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:publisher'); 
   
-  if (empty($publisher)) {
-    $publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:publisher');
+  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+  switch (trim($genre)) {
+	case 'Dissertation':
+	case 'Master Thesis':
+	case 'Bachelor Thesis':
+		// in case of theses, we need the degree granting institution instead of the publisher for the citations (and there is no other variable available for this purpose):
+		$publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:name[@type="corporate"]/mods:namePart');
+		
+    default:
+		$publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:publisher'); 
+  
+		if (empty($publisher)) {
+			$publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:publisher');
+		}
   }
+ 
   return $publisher;
 }
-
 /**
  * Gets the publication place depending on the publication type.
  *
