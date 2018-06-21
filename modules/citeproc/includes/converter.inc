@@ -133,18 +133,15 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'event' => convert_mods_to_citeproc_json_event($mods),
       'event-place' => convert_mods_to_citeproc_json_event_place($mods),
       'event-date' => convert_mods_to_citeproc_json_event_date($mods),
-      //'genre' => convert_mods_to_citeproc_json_genre($mods),
+      'genre' => convert_mods_to_citeproc_json_thesisType($mods),
       'ISBN' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="isbn"]'),
       'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
       'issue' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="issue"]/mods:number'),
       'note' => convert_mods_to_citeproc_json_note($mods),
-      //'number' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo/mods:partNumber'),
       'number' => convert_mods_to_citeproc_json_collection_seriesVolNumber($mods),
       'page' => convert_mods_to_citeproc_json_page($mods),
-      //'publisher' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:publisher'),
-	  'publisher' => convert_mods_to_citeproc_json_publisher($mods),
-      //'publisher-place' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:originInfo/mods:place/mods:placeTerm'),
-	  'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
+      'publisher' => convert_mods_to_citeproc_json_publisher($mods),
+      'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
       'URL' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:location/mods:url'),
       'number-pmid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="accession"]'),
       'number-pmcid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="pmc"]'),
@@ -168,15 +165,37 @@ function convert_mods_to_citeproc_jsons($mods_in) {
     return array();
   }
 }
-
 /**
- * Convert the given MODS genre to JSON repersentation.
+ * Convert the given MODS genre to the JSON genre element - which, in case of theses, is the thesis type. (The function can be expanded for further cases where the CSL genre element is needed.)
  *
  * @param mixed $mods
  *   A MODS document.
  *
  * @return string
- *   The JSON repersentation of the MODS genre.
+ *   In case of theses a string representing the type of thesis.
+ */
+function convert_mods_to_citeproc_json_thesisType ($mods) {
+  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+  switch (trim($genre)) {
+	case 'Dissertation':
+		return 'DISS';
+	case 'Master Thesis':
+		return 'MAST';
+	case 'Bachelor Thesis':
+		return 'BACH';
+		
+    default:
+      return '';
+  }
+}
+/**
+ * Convert the given MODS genre to JSON representation.
+ *
+ * @param mixed $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The JSON representation of the MODS genre.
  */
 function convert_mods_to_citeproc_json_genre($mods) {
   $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
