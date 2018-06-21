@@ -138,7 +138,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
       'issue' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="issue"]/mods:number'),
       'note' => convert_mods_to_citeproc_json_note($mods),
-      'number' => convert_mods_to_citeproc_json_collection_seriesVolNumber($mods),
+      'number' => convert_mods_to_citeproc_json_number($mods),
       'page' => convert_mods_to_citeproc_json_page($mods),
       'publisher' => convert_mods_to_citeproc_json_publisher($mods),
       'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
@@ -347,28 +347,37 @@ function convert_mods_to_citeproc_json_collection_title(SimpleXMLElement $mods) 
   }
 }
 /**
- * Gets the series volume number property for the Citation.
+ * Gets the number property for the Citation.
  *
  * @param SimpleXMLElement $mods
  *   A MODS document.
  *
  * @return string
- *   The series volume number property for the Citation.
+ *   The number property for the Citation.
  */
-function convert_mods_to_citeproc_json_collection_seriesVolNumber(SimpleXMLElement $mods) {
-  // look in the series element not embedded in any other element; should give the correct result for publication types like 'Book' where the publication is itself the entire entity:
-  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:partNumber');
-  if (isset($property)) {
-    return $property;
-  }
+function convert_mods_to_citeproc_json_number(SimpleXMLElement $mods) {
+  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+  switch (trim($genre)) {
+	case 'Report':
+		// in case of reports, return the report number:
+		return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:note[@type="report number"]');
+	
+	// otherwise: return the series volume number:
+    default:
+		// look in the series element not embedded in any other element; should give the correct result for publication types like 'Book' where the publication is itself the entire entity:
+		$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:partNumber');
+		if (isset($property)) {
+			return $property;
+		}
   
-  else {
-	// look in the series element embedded in a relatedItem-type-host element; should give the correct result for publication types like 'Book Chapter' where the publication is part of a bigger entity:
-	$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:partNumber');
-	if (isset($property)) {
-	  return $property;
+		else {
+			// look in the series element embedded in a relatedItem-type-host element; should give the correct result for publication types like 'Book Chapter' where the publication is part of a bigger entity:
+			$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:relatedItem[@type="series"]/mods:titleInfo[not(@type)]/mods:partNumber');
+			if (isset($property)) {
+			  return $property;
+			}
+		}
 	}
-  }
 }
 /**
  * Gets the event property for the Citation.
