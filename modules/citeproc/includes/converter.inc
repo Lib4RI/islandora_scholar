@@ -128,12 +128,13 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'call-number' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:classification'),
       'collection-title' => convert_mods_to_citeproc_json_collection_title($mods),
       'container-title' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:titleInfo[not(@type)]/mods:title'),
+      'container-title-short' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:titleInfo[type="abbreviated"]/mods:title'),
       'DOI' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="doi"]'),
       'edition' => preg_replace('/[^0-9]/', '', convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:edition')),
       'event' => convert_mods_to_citeproc_json_event($mods),
       'event-place' => convert_mods_to_citeproc_json_event_place($mods),
       'event-date' => convert_mods_to_citeproc_json_event_date($mods),
-      'genre' => convert_mods_to_citeproc_json_thesisType($mods),
+      'genre' => convert_mods_to_citeproc_csl_genre($mods),
       'ISBN' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="isbn"]'),
       'volume' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
       'issue' => (int) convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="issue"]/mods:number'),
@@ -146,7 +147,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'number-pmid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="accession"]'),
       'number-pmcid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="pmc"]'),
       'number-nihmsid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="mid"]'),
-      'type' => convert_mods_to_citeproc_json_genre($mods),
+      'type' => convert_mods_to_citeproc_csl_type($mods),
     ),
     $names,
     $dates
@@ -166,7 +167,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
   }
 }
 /**
- * Convert the given MODS genre to the JSON genre element - which, in case of theses, is the thesis type. (The function can be expanded for further cases where the CSL genre element is needed.)
+ * Convert the given MODS genre to the JSON genre element - which, in case of theses, is the thesis type. (The function could be expanded for further cases where the CSL genre element is needed.)
  *
  * @param mixed $mods
  *   A MODS document.
@@ -174,30 +175,30 @@ function convert_mods_to_citeproc_jsons($mods_in) {
  * @return string
  *   In case of theses a string representing the type of thesis.
  */
-function convert_mods_to_citeproc_json_thesisType ($mods) {
+function convert_mods_to_citeproc_csl_genre ($mods) {
   $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
   switch (trim($genre)) {
 	case 'Dissertation':
-		return 'DISS';
+		return 'Doctoral dissertation';
 	case 'Master Thesis':
-		return 'MAST';
+		return 'Master\'s thesis':';
 	case 'Bachelor Thesis':
-		return 'BACH';
+		return 'Bachelor\'s thesis';
 		
     default:
       return '';
   }
 }
 /**
- * Convert the given MODS genre to JSON representation.
+ * Convert the given MODS genre to CSL type.
  *
  * @param mixed $mods
  *   A MODS document.
  *
  * @return string
- *   The JSON representation of the MODS genre.
+ *   The CSL representation of the MODS genre.
  */
-function convert_mods_to_citeproc_json_genre($mods) {
+function convert_mods_to_citeproc_csl_type($mods) {
   $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
   switch (trim($genre)) {
     case 'Journal Article':
@@ -253,7 +254,7 @@ function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
 	case 'Master Thesis':
 	case 'Bachelor Thesis':
 		// in case of theses, we need the degree granting institution instead of the publisher for the citations (and there is no other variable available for this purpose):
-		$publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:name[@type="corporate"]/mods:namePart');
+		return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:name[@type="corporate"]/mods:namePart');
 		
     default:
 		$publisher = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:publisher'); 
