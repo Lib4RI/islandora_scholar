@@ -181,7 +181,7 @@ function convert_mods_to_citeproc_csl_genre ($mods) {
 	case 'Dissertation':
 		return 'Doctoral dissertation';
 	case 'Master Thesis':
-		return 'Master\'s thesis':';
+		return 'Master\'s thesis';
 	case 'Bachelor Thesis':
 		return 'Bachelor\'s thesis';
 		
