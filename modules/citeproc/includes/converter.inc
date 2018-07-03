@@ -776,7 +776,7 @@ function convert_mods_to_citeproc_json_name(SimpleXMLElement $name) {
       convert_mods_to_citeproc_json_name_personal($name) :
       convert_mods_to_citeproc_json_name_corporate($name);
   $output = array_map('trim', $output);
-  $output = array_map('ucfirst', $output);
+  //$output = array_map('ucfirst', $output); // commented out because lower/upper case should not be changed in names
   $output = array_filter($output);
   return $output;
 }
