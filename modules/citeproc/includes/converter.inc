@@ -390,23 +390,9 @@ function convert_mods_to_citeproc_json_number(SimpleXMLElement $mods) {
  *   The event property for the Citation.
  */
 function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
-  // new code (NK, 24.5.2018)
   $property = $mods->xpath("//mods:mods[1]/mods:name[@type='conference']");
   if (isset($property)) {
     return $property[0];
-  }
-
-  else {
-    // code as it was before (NK, 24.5.2018)
-    $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:relatedItem/mods:titleInfo/mods:title');
-    // marcgt.
-    if (isset($property)) {
-      return $property;
-    }
-    else {
-      // zotero.
-      return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"]="conferencePaper"]/mods:relatedItem/mods:titleInfo/mods:title');
-    }
   }
 }
 
@@ -420,29 +406,15 @@ function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
  *   The event-place property for the Citation.
  */
 function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods) {
-  $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:place/mods:placeTerm[@type = "text"]');
-  if (isset($property)) {
-    return $property;
-  }
-  
-  else {
-	$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo[@eventType = "conference"]/mods:place/mods:placeTerm[@type = "text"]');
-	if (isset($property)) {
-	  return $property;
-	}
-  
-	else {
-		// code as it was originally (NK, 24.5.2018)
-		$property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="marcgt"][text()="conference publication"]]/mods:originInfo/mods:place/mods:placeTerm');
-		// marcgt.
-		if (isset($property)) {
-		  return $property;
-		}
-		else {
-		  // zotero.
-		  return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1][mods:genre[@authority="local"][text()="conferencePaper"]]/mods:originInfo/mods:place/mods:placeTerm');
-		}
-	}
+  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+  switch (trim($genre)) {
+	case 'Conference Proceedings':
+		// conference proceedings have the conference place in XML element originInfo with attribute eventType='conference':
+		return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo[@eventType = "conference"]/mods:place/mods:placeTerm[@type = "text"]');
+	 
+    default:
+		// the other publicaton types have the conference place in the same XML element but without this attribute:
+		return convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo[not(@eventType)]/mods:place/mods:placeTerm[@type = "text"]');
   }
 }
 /**
@@ -455,7 +427,6 @@ function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods) {
  *   The event-date property for the Citation.
  */
 function convert_mods_to_citeproc_json_event_date(SimpleXMLElement $mods) {
-  // new code (NK, 24.5.2018)
   $property = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:dateOther[@type = "conferenceDate"]');
   if (isset($property)) {
     return $property;
