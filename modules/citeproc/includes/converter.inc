@@ -141,6 +141,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'note' => convert_mods_to_citeproc_json_note($mods),
       'number' => convert_mods_to_citeproc_json_number($mods),
       'page' => convert_mods_to_citeproc_json_page($mods),
+      'number-of-pages' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:physicalDescription/mods:extent[@unit="page"]'),
       'publisher' => convert_mods_to_citeproc_json_publisher($mods),
       'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
       'URL' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="uri"]'),
