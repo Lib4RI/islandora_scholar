@@ -141,7 +141,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'note' => convert_mods_to_citeproc_json_note($mods),
       'number' => convert_mods_to_citeproc_json_number($mods),
       'page' => convert_mods_to_citeproc_json_page($mods),
-      'number-of-pages' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:physicalDescription/mods:extent[@unit="page"]'),
+      'number-of-pages' => convert_mods_to_citeproc_json_no_of_pages($mods),
       'publisher' => convert_mods_to_citeproc_json_publisher($mods),
       'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
       'URL' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="uri"]'),
@@ -491,7 +491,23 @@ function convert_mods_to_citeproc_json_page(SimpleXMLElement $mods) {
   }
   return $output;
 }
-
+/**
+ * Gets the number of pages for the citation.
+ *
+ * @param SimpleXMLElement $mods
+ *   A MODS document.
+ *
+ * @return string
+ *   The number of pages for the citation.
+ */
+function convert_mods_to_citeproc_json_no_of_pages(SimpleXMLElement $mods) {
+	// the attribute 'unit' has either 'page' or 'pages' as value, depending on the publication type:
+	$pages = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:physicalDescription/mods:extent[@unit="page"]');
+	if (empty($pages)) {
+		$pages = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:physicalDescription/mods:extent[@unit="pages"]');
+	}
+	return $pages;
+}
 /**
  * Gets the type property for the Citation.
  *
