@@ -116,6 +116,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
     }
   }
   if ($mods instanceof SimpleXMLElement) {
+    $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
     add_mods_namespace($mods);
     // Merge with main object.
     $names = convert_mods_to_citeproc_json_names($mods);
@@ -132,23 +133,23 @@ function convert_mods_to_citeproc_jsons($mods_in) {
       'DOI' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="doi"]'),
       'edition' => preg_replace('/[^0-9]/', '', convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:originInfo/mods:edition')),
       'event' => convert_mods_to_citeproc_json_event($mods),
-      'event-place' => convert_mods_to_citeproc_json_event_place($mods),
+      'event-place' => convert_mods_to_citeproc_json_event_place($mods, $genre),
       'event-date' => convert_mods_to_citeproc_json_event_date($mods),
-      'genre' => convert_mods_to_citeproc_csl_genre($mods),
+      'genre' => convert_mods_to_citeproc_csl_genre($genre),
       'ISBN' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="isbn"]'),
       'volume' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="volume"]/mods:number'),
       'issue' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:relatedItem[@type="host"]/mods:part/mods:detail[@type="issue"]/mods:number'),
       'note' => convert_mods_to_citeproc_json_note($mods),
-      'number' => convert_mods_to_citeproc_json_number($mods),
+      'number' => convert_mods_to_citeproc_json_number($mods, $genre),
       'page' => convert_mods_to_citeproc_json_page($mods),
       'number-of-pages' => convert_mods_to_citeproc_json_no_of_pages($mods),
       'publisher' => convert_mods_to_citeproc_json_publisher($mods),
-      'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods),
+      'publisher-place' => convert_mods_to_citeproc_json_publisher_place($mods, $genre),
       'URL' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="uri"]'),
       'number-pmid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="accession"]'),
       'number-pmcid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="pmc"]'),
       'number-nihmsid' => convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:identifier[@type="mid"]'),
-      'type' => convert_mods_to_citeproc_csl_type($mods),
+      'type' => convert_mods_to_citeproc_csl_type($genre),
     ),
     $names,
     $dates
@@ -176,8 +177,7 @@ function convert_mods_to_citeproc_jsons($mods_in) {
  * @return string
  *   In case of theses a string representing the type of thesis.
  */
-function convert_mods_to_citeproc_csl_genre ($mods) {
-  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+function convert_mods_to_citeproc_csl_genre ($genre) {
   switch (trim($genre)) {
 	case 'Dissertation':
 		return 'Doctoral dissertation';
@@ -199,8 +199,7 @@ function convert_mods_to_citeproc_csl_genre ($mods) {
  * @return string
  *   The CSL representation of the MODS genre.
  */
-function convert_mods_to_citeproc_csl_type($mods) {
-  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+function convert_mods_to_citeproc_csl_type($genre) {
   switch (trim($genre)) {
     case 'Journal Article':
       return 'article-journal';
@@ -265,8 +264,7 @@ function convert_mods_to_citeproc_json_publisher(SimpleXMLElement $mods) {
  * @return string
  *   The publication place property for the Citation.
  */
-function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods) { 
-  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+function convert_mods_to_citeproc_json_publisher_place(SimpleXMLElement $mods, $genre) { 
   switch (trim($genre)) {
     case 'Book Chapter':
     case 'Conference Item':
@@ -346,8 +344,7 @@ function convert_mods_to_citeproc_json_collection_title(SimpleXMLElement $mods) 
  * @return string
  *   The number property for the Citation.
  */
-function convert_mods_to_citeproc_json_number(SimpleXMLElement $mods) {
-  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+function convert_mods_to_citeproc_json_number(SimpleXMLElement $mods, $genre) {
   switch (trim($genre)) {
 	case 'Report':
 		// in case of reports, return the report number:
@@ -395,8 +392,7 @@ function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
  * @return string
  *   The event-place property for the Citation.
  */
-function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods) {
-  $genre = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:genre');
+function convert_mods_to_citeproc_json_event_place(SimpleXMLElement $mods, $genre) {
   switch (trim($genre)) {
 	case 'Conference Proceedings':
 		// conference proceedings have the conference place in XML element originInfo with attribute eventType='conference':
