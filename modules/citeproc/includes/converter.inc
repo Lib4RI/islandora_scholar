@@ -378,9 +378,7 @@ function convert_mods_to_citeproc_json_number(SimpleXMLElement $mods, $genre) {
  */
 function convert_mods_to_citeproc_json_event(SimpleXMLElement $mods) {
   $property = $mods->xpath("//mods:mods[1]/mods:name[@type='conference']");
-  if (isset($property)) {
-    return $property[0];
-  }
+  return !empty($property) ? (string) $property[0] : NULL;
 }
 
 /**
@@ -918,3 +916,4 @@ function convert_mods_to_citeproc_json_query(SimpleXMLElement $mods, $path) {
   $property = $mods->xpath($path);
   return !empty($property) ? (string) $property[0] : NULL;
 }
+
