@@ -70,21 +70,26 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
   module_load_include('inc', 'islandora', 'includes/utilities');
 
   $source = $source = drupal_realpath($file_uri);
-  $executable = variable_get('islandora_pdf_path_to_gs', '/usr/bin/gs');
-  $exe_args = variable_get('islandora_pdf_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB");
+  
+  $success = 0;
+  $executable = trim( variable_get('islandora_pdf_path_to_gs', '/usr/bin/gs') );
+  $exe_args = trim( variable_get('islandora_pdf_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB") );
 
-  $temp = file_create_filename('pdfa.'.time().'.pdf', 'temporary://');
-  $derivative_file_uri = drupal_realpath($temp);
-  $command = "$executable " . $exe_args . " -sDEVICE=pdfwrite -o $derivative_file_uri -dPDFACompatibilityPolicy=1 $source ";
+  if ( !empty($executable) && !empty($exe_args) && substr($executable,0,1) != "#" && substr($exe_args,0,1) != "#" ) {
+  
+	  $temp = file_create_filename('pdfa.'.time().'.pdf', 'temporary://');
+	  $derivative_file_uri = drupal_realpath($temp);
+	  $command = $executable . " " . $exe_args . " -sDEVICE=pdfwrite -o $derivative_file_uri -dPDFACompatibilityPolicy=1 $source ";
 
-//test
-  if ( user_is_logged_in() ) {
-    dpm( "File: " . $file_uri . "\r\n Called from: " . $dsid_info . ": " . $command );
+	  //test
+	  if ( user_is_logged_in() ) {
+	    dpm( "File: " . $file_uri . "\r\n Called from: " . $dsid . ": " . $command );
+	  }
+
+	  exec($command, $execout, $returncode);
+	  $success = ($returncode === 0);
   }
 
-  exec($command, $execout, $returncode);
-
-  $success = ($returncode === 0);
   if (!$success) {
     $success = array(
       'success' => FALSE,
@@ -111,7 +116,7 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
         'success' => TRUE,
         'messages' => array(
           array(
-            'message' => t('Created PDFA derivative.'),
+            'message' => t('Created PDF/A derivative.'),
             'type' => 'dsm',
           ),
         ),
@@ -122,7 +127,7 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
         'success' => FALSE,
         'messages' => array(
           array(
-            'message' => t('Failed to create PDFA derivative for @pid. Error message: @error'),
+            'message' => t('Failed to create PDF/A derivative for @pid. Error message: @error'),
             'message_sub' => array(
               '@pid' => $object->id,
               '@error' => $success,

@@ -228,11 +228,8 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Path to ghostscript executable'),
     '#default_value' => "/usr/bin/gs",
-    '#description' => t('!gs_confirmation_message',
-      array(
-        '!gs_confirmation_message' => $gs_confirmation_message,
-      )
-    ),
+    '#description' => t('Local path to Ghostscript.'),
+
     '#ajax' => array(
       'callback' => 'islandora_update_gs_url_div',
       'wrapper' => 'islandora-url',
@@ -250,7 +247,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
   $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_pdfa_gs_args'] = array(
     '#type' => 'textfield',
     '#title' => t('Ghostscript parameters for PDF-A'),
-    '#description' => t('PDF/A optimized parameter string for Ghostscript.'),
+    '#description' => t('PDF/A optimized parameter string for Ghostscript. A leading \'#\' will disable the PDF/A creation.'),
     '#default_value' => variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB"),
     '#size' => 128,
   );
