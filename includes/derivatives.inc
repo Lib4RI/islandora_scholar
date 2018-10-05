@@ -198,6 +198,10 @@ function islandora_scholar_add_jpg_derivative(AbstractObject $object, $file_uri,
     if (!isset($object[$source_dsid])) {
       return islandora_scholar_missing_pdf_datastream($object->id);
     }
+    
+//test
+dpm( "Called 'islandora_scholar_add_jpg_derivative()'/" . $dsid );
+  
     $derivative_file_uri = islandora_scholar_create_jpg_derivative($file_uri, $dsid, $width, $height);
     // Receive a valid file URI to add or an error message otherwise.
     if (!is_array($derivative_file_uri) && file_valid_uri($derivative_file_uri)) {
@@ -207,7 +211,7 @@ function islandora_scholar_add_jpg_derivative(AbstractObject $object, $file_uri,
           'success' => TRUE,
           'messages' => array(
             array(
-              'message' => t('Created JPG derivative for @dsid (@pid).'),
+              'message' => t('Created JePG derivative for @dsid (@pid).'),
               'message_sub' => array(
                 '@dsid' => $dsid,
                 '@pid' => $object->id,
@@ -222,7 +226,7 @@ function islandora_scholar_add_jpg_derivative(AbstractObject $object, $file_uri,
           'success' => FALSE,
           'messages' => array(
             array(
-              'message' => t('Failed to create JPG derivative for @dsid (@pid). Error message: @message'),
+              'message' => t('Failed to create JePG derivative for @dsid (@pid). Error message: @message'),
               'message_sub' => array(
                 '@dsid' => $dsid,
                 '@pid' => $object->id,
