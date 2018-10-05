@@ -32,6 +32,8 @@ function islandora_scholar_uninstall() {
     'islandora_scholar_thumbnail_width',
     'islandora_scholar_thumbnail_height',
     'islandora_scholar_path_to_pdftotext',
+    'islandora_scholar_path_to_gs',
+    'islandora_scholar_pdfa_gs_args',
     'islandora_scholar_preview_width',
     'islandora_scholar_preview_height',
     'islandora_scholar_issn_cache_time',

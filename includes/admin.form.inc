@@ -193,6 +193,11 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
     '#title' => t('TEXT'),
   );
 
+  $form['islandora_scholar_pdfa_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('PDF/A'),
+  );
+
   $form['islandora_scholar_url_fieldset']['islandora_scholar_create_fulltext'] = array(
     '#type' => 'checkbox',
     '#title' => t("Extract text streams from PDFs using pdftotext"),
@@ -212,11 +217,67 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
     '#suffix' => '</div>',
     '#type' => 'markup',
   );
-  $form['islandora_scholar_url_fieldset']['wrapper'] = array(
+
+  $form['islandora_scholar_pdfa_fieldset']['wrapper'] = array(
     '#prefix' => '<div id="islandora-url">',
     '#suffix' => '</div>',
     '#type' => 'markup',
   );
+
+  $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_path_to_gs'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Path to ghostscript executable'),
+    '#default_value' => "/usr/bin/gs",
+    '#description' => t('!gs_confirmation_message',
+      array(
+        '!gs_confirmation_message' => $gs_confirmation_message,
+      )
+    ),
+    '#ajax' => array(
+      'callback' => 'islandora_update_gs_url_div',
+      'wrapper' => 'islandora-url',
+      'effect' => 'fade',
+      'event' => 'blur',
+      'progress' => array('type' => 'throbber'),
+    ),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="islandora_scholar_create_pdfa"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
+  $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_pdfa_gs_args'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Ghostscript parameters for PDF-A'),
+    '#description' => t('PDF/A optimized parameter string for Ghostscript.'),
+    '#default_value' => variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB"),
+    '#size' => 128,
+  );
+/*  
+  $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_pdfa_gs_args'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Ghostscript parameters for PDF-A'),
+    '#default_value' => "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB",
+    '#description' => t('!gs_confirmation_message',
+      array(
+        '!gs_confirmation_message' => $gs_confirmation_message,
+      )
+    ),
+    '#ajax' => array(
+      'callback' => 'islandora_update_gs_url_div',
+      'wrapper' => 'islandora-url',
+      'effect' => 'fade',
+      'event' => 'blur',
+      'progress' => array('type' => 'throbber'),
+    ),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="islandora_scholar_create_pdfa"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+*/
 
   $form['islandora_scholar_url_fieldset']['wrapper']['islandora_scholar_path_to_pdftotext'] = array(
     '#type' => 'textfield',

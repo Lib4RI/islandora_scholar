@@ -25,28 +25,133 @@ function islandora_scholar_get_derivative_source_as_unmanaged_file(AbstractObjec
   return $file_uri;
 }
 
+
 /**
- * Creates a JPG deriviative for the TN datastream.
+ * Creates a PDF/A deriviative for the PDF datastream.
  *
  * @param AbstractObject $object
  *   The object to add the deriviative datastreams to.
  * @param bool $force
  *   Whether the derivative generation is being forced or not.
  * @param array $hook
- *   An array describing the hook triggering the derivative.
+ *   The array defining the derivative hook.
  *
- * @return array|NULL
- *   An array describing the outcome of the thumbnail creation or NULL if no
- *   derivatives are to be created or updated.
+ * @return array
+ *   An array describing the outcome of the PREVIEW datastream creation or NULL
+ *   if no derivatives are to be created or updated.
  *
  * @see hook_islandora_derivative()
  */
+function islandora_scholar_add_pdfa_derivative(AbstractObject $object, $force = FALSE, $hook = array() ) {
+  if ($force || !isset($object['PDF-A'])) {
+    $results = array();
+/*
+    if (!isset($object['OBJ'])) {
+      return islandora_scholar_missing_obj_datastream($object->id);
+    }
+    if (!isset($object[$source_dsid])) {
+      return islandora_scholar_missing_pdf_datastream($object->id);
+    }
+*/
+    $file_uri = islandora_scholar_get_derivative_source_as_unmanaged_file($object, $hook['source_dsid']);
+
+    $results = islandora_scholar_add_pdfa_by_gs($object, $file_uri, 'PDF-A', $force, $hook['source_dsid']);
+    file_unmanaged_delete($file_uri);
+
+    return $results;
+  }
+}
+
+/**
+ * Creates a PDF/A deriviative from a given PDF file. Based on islandora_scholar_add_jpg_derivative()
+ *
+ */
+function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $dsid, $force, $source_dsid) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+
+  $source = $source = drupal_realpath($file_uri);
+  $executable = variable_get('islandora_pdf_path_to_gs', '/usr/bin/gs');
+  $exe_args = variable_get('islandora_pdf_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB");
+
+  $temp = file_create_filename('pdfa.'.time().'.pdf', 'temporary://');
+  $derivative_file_uri = drupal_realpath($temp);
+  $command = "$executable " . $exe_args . " -sDEVICE=pdfwrite -o $derivative_file_uri -dPDFACompatibilityPolicy=1 $source ";
+
+//test
+  if ( user_is_logged_in() ) {
+    dpm( "File: " . $file_uri . "\r\n Called from: " . $dsid_info . ": " . $command );
+  }
+
+  exec($command, $execout, $returncode);
+
+  $success = ($returncode === 0);
+  if (!$success) {
+    $success = array(
+      'success' => FALSE,
+      'messages' => array(
+        array(
+          'message' => t('`%command` returned an error when creating %dsid derivative of PID %pid: %error'),
+          'message_sub' => array(
+            '%command' => $command,
+            '%dsid' => $dsid,
+            '%pid' => $object->id,
+            '%error' => $execout,
+          ),
+          'type' => 'dsm',
+          'severity' => WATCHDOG_ERROR,
+        ),
+      ),
+    );
+  }
+  else {
+//    $success = islandora_pdf_add_datastream($object, $dsid, $derivative_file_uri);
+    $success = islandora_scholar_add_datastream($object, $dsid, $derivative_file_uri);
+    if ($success === TRUE) {
+      return array(
+        'success' => TRUE,
+        'messages' => array(
+          array(
+            'message' => t('Created PDFA derivative.'),
+            'type' => 'dsm',
+          ),
+        ),
+      );
+    }
+    else {
+      return array(
+        'success' => FALSE,
+        'messages' => array(
+          array(
+            'message' => t('Failed to create PDFA derivative for @pid. Error message: @error'),
+            'message_sub' => array(
+              '@pid' => $object->id,
+              '@error' => $success,
+            ),
+            'type' => 'watchdog',
+            'severity' => WATCHDOG_ERROR,
+          ),
+        ),
+      );
+    }
+  }
+  file_unmanaged_delete($temp);
+  return $success;
+}
+
+
+ 
+
 function islandora_scholar_add_tn_derivative(AbstractObject $object, $force = FALSE, $hook = array()) {
   if ($force || !isset($object['TN'])) {
     $width = variable_get('islandora_scholar_thumbnail_width', 200);
     $height = variable_get('islandora_scholar_thumbnail_height', 200);
     $file_uri = islandora_scholar_get_derivative_source_as_unmanaged_file($object, $hook['source_dsid']);
+    
     $results = islandora_scholar_add_jpg_derivative($object, $file_uri, 'TN', $width, $height, $force, $hook['source_dsid']);
+
+//	$results = islandora_scholar_add_pdfa_derivative($object, $file_uri, 'TN', FALSE );
+//  dpm( "TN: " . gettype($results) );
+
     file_unmanaged_delete($file_uri);
     return $results;
   }
@@ -163,11 +268,17 @@ function islandora_scholar_add_preview_derivative(AbstractObject $object, $force
     $width = variable_get('islandora_scholar_preview_width', 500);
     $height = variable_get('islandora_scholar_preview_height', 700);
     $file_uri = islandora_scholar_get_derivative_source_as_unmanaged_file($object, $hook['source_dsid']);
+
+//  $results = islandora_scholar_add_pdfa_derivative($object, $file_uri, 'PREVIEW', FALSE );
+//  dpm( "PV: " . gettype($results) );
+
     $results = islandora_scholar_add_jpg_derivative($object, $file_uri, 'PREVIEW', $width, $height, $force, $hook['source_dsid']);
     file_unmanaged_delete($file_uri);
+
     return $results;
   }
 }
+
 
 /**
  * Creates a JPG deriviative of the given file.
@@ -198,10 +309,6 @@ function islandora_scholar_add_jpg_derivative(AbstractObject $object, $file_uri,
     if (!isset($object[$source_dsid])) {
       return islandora_scholar_missing_pdf_datastream($object->id);
     }
-    
-//test
-dpm( "Called 'islandora_scholar_add_jpg_derivative()'/" . $dsid );
-  
     $derivative_file_uri = islandora_scholar_create_jpg_derivative($file_uri, $dsid, $width, $height);
     // Receive a valid file URI to add or an error message otherwise.
     if (!is_array($derivative_file_uri) && file_valid_uri($derivative_file_uri)) {
@@ -368,3 +475,4 @@ function islandora_scholar_missing_pdf_datastream($pid) {
     ),
   );
 }
+

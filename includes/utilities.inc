@@ -144,10 +144,22 @@ function islandora_scholar_get_ingest_steps() {
  */
 function islandora_scholar_get_derivatives() {
   $derivatives = array();
+//test
+  if ( variable_get('islandora_scholar_create_pdfa', TRUE)) {
+    $derivatives[] = array(
+      'source_dsid' => 'PDF',
+      'destination_dsid' => 'PDF-A',
+      'weight' => '0',
+      'function' => array(
+        'islandora_scholar_add_pdfa_derivative',
+      ),
+      'file' => drupal_get_path('module', 'islandora_scholar') . '/includes/derivatives.inc',
+    );
+  }
   $derivatives[] = array(
     'source_dsid' => 'PDF',
     'destination_dsid' => 'TN',
-    'weight' => '0',
+    'weight' => '1',
     'function' => array(
       'islandora_scholar_add_tn_derivative',
     ),
@@ -156,7 +168,7 @@ function islandora_scholar_get_derivatives() {
   $derivatives[] = array(
     'source_dsid' => 'PDF',
     'destination_dsid' => 'PREVIEW',
-    'weight' => '1',
+    'weight' => '2',
     'function' => array(
       'islandora_scholar_add_preview_derivative',
     ),
@@ -166,13 +178,14 @@ function islandora_scholar_get_derivatives() {
     $derivatives[] = array(
       'source_dsid' => 'PDF',
       'destination_dsid' => 'FULL_TEXT',
-      'weight' => '2',
+      'weight' => '3',
       'function' => array(
         'islandora_scholar_add_fulltext_derivative',
       ),
       'file' => drupal_get_path('module', 'islandora_scholar') . '/includes/derivatives.inc',
     );
   }
+
   return $derivatives;
 }
 
