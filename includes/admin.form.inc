@@ -246,7 +246,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
 
   $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_pdfa_gs_args'] = array(
     '#type' => 'textfield',
-    '#title' => t('Ghostscript parameters for PDF-A'),
+    '#title' => t('Ghostscript parameters for PDF/A'),
     '#description' => t('PDF/A optimized parameter string for Ghostscript. A leading \'#\' will disable the PDF/A creation.'),
     '#default_value' => variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB"),
     '#size' => 128,
