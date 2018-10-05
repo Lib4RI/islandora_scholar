@@ -226,7 +226,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
 
   $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_path_to_gs'] = array(
     '#type' => 'textfield',
-    '#title' => t('Path to ghostscript executable'),
+    '#title' => t('Path to Ghostscript executable'),
     '#default_value' => "/usr/bin/gs",
     '#description' => t('Local path to Ghostscript.'),
 

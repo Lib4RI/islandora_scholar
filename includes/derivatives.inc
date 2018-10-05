@@ -72,8 +72,8 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
   $source = $source = drupal_realpath($file_uri);
   
   $success = 0;
-  $executable = trim( variable_get('islandora_pdf_path_to_gs', '/usr/bin/gs') );
-  $exe_args = trim( variable_get('islandora_pdf_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB") );
+  $executable = trim( variable_get('islandora_scholar_path_to_gs', '/usr/bin/gs') );
+  $exe_args = trim( variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB") );
 
   if ( !empty($executable) && !empty($exe_args) && substr($executable,0,1) != "#" && substr($exe_args,0,1) != "#" ) {
   
