@@ -71,23 +71,44 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
 
   $source = $source = drupal_realpath($file_uri);
   
-  $success = 0;
   $executable = trim( variable_get('islandora_scholar_path_to_gs', '/usr/bin/gs') );
-  $exe_args = trim( variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB") );
+  $exe_args = trim( variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB -r300 -dPDFACompatibilityPolicy=1 -sDEVICE=pdfwrite") );
 
-  if ( !empty($executable) && !empty($exe_args) && substr($executable,0,1) != "#" && substr($exe_args,0,1) != "#" ) {
-  
-	  $temp = file_create_filename('pdfa.'.time().'.pdf', 'temporary://');
-	  $derivative_file_uri = drupal_realpath($temp);
-	  $command = $executable . " " . $exe_args . " -sDEVICE=pdfwrite -o $derivative_file_uri -dPDFACompatibilityPolicy=1 $source ";
+  if ( substr($executable,0,1) == "#" || substr($exe_args,0,1) == "#" ) {
+  	dpm( "PDF/A generation disabled, see:\r\nAdministration - Islandora - Solution pack configuration - Scholar - PDF cofiguration" );
+  	return array();
+  }
+  if ( empty($executable) || empty($exe_args) ) {
+  	dpm( "Ghostscript executable/options not assigned, see:\r\nAdministration - Islandora - Solution pack configuration - Scholar - PDF cofiguration" );
+  	return array();
+  }
 
-	  //test
-	  if ( user_is_logged_in() ) {
-	    dpm( "File: " . $file_uri . "\r\n Called from: " . $dsid . ": " . $command );
-	  }
+  $tNow = 0;
+  $gsLog = "";
+  if ( user_is_logged_in() ) {
+    $tNow = microtime(TRUE);
+    $gsLog = "/tmp/gs-pdfa-on-ingest." . time() . ".log";
+  }
 
-	  exec($command, $execout, $returncode);
-	  $success = ($returncode === 0);
+  $temp = file_create_filename('pdfa.'.time().'.pdf', 'temporary://');
+  $derivative_file_uri = drupal_realpath($temp);
+
+  $command = $executable . " " . $exe_args . " -o $derivative_file_uri $source " . ( $gsLog != "" ? "&>>{$gsLog}" : "" );
+
+  exec($command, $execout, $returncode);
+  $success = ($returncode === 0);
+
+  if ( user_is_logged_in() ) {
+/*
+    $dpm_info = array_pop($execout);		// an array( "GS process info", "Page 1", "Page 2", ... )
+    $dpm_info = ( stristr($dpm_info,"page") ? ( "Processed " . sizeof($execout) . " pages" ) : array_shift($execout) );
+    $dpm_info .= "\r\n" . sizeof($execout) . "\r\n\r\n" . implode("\r\n-- ",$execout);
+    $dpm_info .= "\r\nTime required: " . strval(round(doubleval( microtime(TRUE) - $tNow )*1000)/1000) . " sec";
+*/
+    $dpm_info = "Time required: " . strval(round(doubleval( microtime(TRUE) - $tNow )*1000)/1000) . " sec";
+//  $dpm_info .= "\r\n\r\n" . file_get_contents($gsLog);
+//  unlink($gsLog);
+    dpm( "PDF/A file: " . $derivative_file_uri . " (" . ((filesize($derivative_file_uri)+512)>>10) . "kB)\r\nGS command: " . $command . "\r\n" . $dpm_info );
   }
 
   if (!$success) {
@@ -187,7 +208,7 @@ function islandora_scholar_add_fulltext_derivative(AbstractObject $object, $forc
     $file_uri = islandora_scholar_get_derivative_source_as_unmanaged_file($object, $hook['source_dsid']);
     $dsid = "FULL_TEXT";
     $source = $source = drupal_realpath($file_uri);
-    $executable = variable_get('islandora_scholar_path_to_pdftotext', '/usr/bin/pdftotext');
+    $executable = trim( variable_get('islandora_scholar_path_to_pdftotext', '/usr/bin/pdftotext') );
     $temp = file_create_filename('fulltext.txt', 'temporary://');
     $derivative_file_uri = drupal_realpath($temp);
     $command = "$executable $source $derivative_file_uri";

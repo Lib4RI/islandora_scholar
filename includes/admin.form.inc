@@ -201,6 +201,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
   $form['islandora_scholar_url_fieldset']['islandora_scholar_create_fulltext'] = array(
     '#type' => 'checkbox',
     '#title' => t("Extract text streams from PDFs using pdftotext"),
+    '#default_value' => variable_get('islandora_scholar_path_to_pdftotext', '/usr/bin/pdftotext'),
     '#description' => t(
       "The extracted text stream is added as FULL_TEXT datastreams and are indexed into Solr. Uploading a text file takes priority over text stream extraction.
       </br><strong>Note:</strong> PDFs that contain visible text do not necessarily contain text streams (e.g. images scanned and saved as PDFs). Consider converting text-filled images with no text streams to TIFFs and using the !book with !ocr enabled.",
@@ -227,7 +228,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
   $form['islandora_scholar_pdfa_fieldset']['wrapper']['islandora_scholar_path_to_gs'] = array(
     '#type' => 'textfield',
     '#title' => t('Path to Ghostscript executable'),
-    '#default_value' => "/usr/bin/gs",
+    '#default_value' => variable_get('islandora_scholar_path_to_gs', '/usr/bin/gs'),
     '#description' => t('Local path to Ghostscript.'),
 
     '#ajax' => array(
@@ -237,6 +238,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
       'event' => 'blur',
       'progress' => array('type' => 'throbber'),
     ),
+
     '#states' => array(
       'visible' => array(
         ':input[name="islandora_scholar_create_pdfa"]' => array('checked' => TRUE),
@@ -248,7 +250,7 @@ function islandora_scholar_admin_pdf_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Ghostscript parameters for PDF/A'),
     '#description' => t('PDF/A optimized parameter string for Ghostscript. A leading \'#\' will disable the PDF/A creation.'),
-    '#default_value' => variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB"),
+    '#default_value' => variable_get('islandora_scholar_pdfa_gs_args', "-dPDFA -dNOOUTERSAVE -dUseCIEColor -sProcessColorModel=DeviceRGB -r300 -dPDFACompatibilityPolicy=1 -sDEVICE=pdfwrite"),
     '#size' => 128,
   );
 /*  
