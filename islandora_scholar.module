@@ -267,3 +267,52 @@ function islandora_scholar_ir_thesisCModel_islandora_derivative() {
   module_load_include('inc', 'islandora_scholar', 'includes/utilities');
   return islandora_scholar_get_derivatives();
 }
+
+
+/**
+ * hook_form_alter() - not needed currently though...
+ *
+function islandora_scholar_form_alter(&$form, &$form_state, $form_id) {
+
+	if ( $form_id != "lib4ridora_upload_form" ) { return; }
+	
+	dpm( "Form ID: " . $form_id );
+}
+*/
+
+ 
+/**
+ * hook_form_FORM_ID_alter() - for form: lib4ridora_upload_form
+ *
+ */
+function islandora_scholar_form_lib4ridora_upload_form_alter(&$form, &$form_state) {
+
+
+	$form['pdfa'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Generate PDF/A'),
+		'#default_value' => FALSE,
+		'#attributes' => array(
+//			'class' => array( 'lib4ri-facility-name', 'plupload-element', 'form-wrapper',	),
+//			'style' => 'width:300px',
+			'pdfa' => t("Generate PDF/A"),
+			'id' => "upload-makes-pdfa",
+		),
+//		'#prefix' => '</span></td><td valign="bottom" style="vertical-align:bottom; width:100px;" width="100" nowrap><span style="position:relative; top:-12px">',
+		'#weight' => 1,
+	);
+/*
+	$toppings = array(
+	  'pepperoni' => t('Pepperoni'),
+	  'black_olives' => t('Black olives'), 
+	  'veggies' => t('Veggies')
+	);
+	$form['pizza'] = array(
+		'#title' => t('Pizza Toppings'),
+		'#type' => 'checkboxes',
+		'#description' => t('Select the pizza toppings you would like.'),
+		'#options' => $toppings,
+	);
+*/
+}
+ 
