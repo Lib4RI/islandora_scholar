@@ -108,7 +108,7 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
     $dpm_info = "Time required: " . strval(round(doubleval( microtime(TRUE) - $tNow )*1000)/1000) . " sec";
 //  $dpm_info .= "\r\n\r\n" . file_get_contents($gsLog);
 //  unlink($gsLog);
-    dpm( "PDF/A file: " . $derivative_file_uri . " (" . ((filesize($derivative_file_uri)+512)>>10) . "kB)\r\nGS command: " . $command . "\r\n" . $dpm_info );
+    dpm( "PDF/A configuration: /admin/islandora/solution_pack_config/scholar/pdf\r\nNew PDF/A file: " . $derivative_file_uri . " (" . ((filesize($derivative_file_uri)+512)>>10) . "kB)\r\nGS command: " . $command . "\r\n" . $dpm_info );
   }
 
   if (!$success) {
