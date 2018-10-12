@@ -268,15 +268,14 @@ function islandora_scholar_ir_thesisCModel_islandora_derivative() {
   return islandora_scholar_get_derivatives();
 }
 
-
 /**
- * Implements hook_element_info() - for larger text fields
-*/
+ * Implements hook_element_info().
+ * Used/useful for larger text fields in admin form so Ghostscript parameters fit in entirely.
+ */
 function islandora_scholar_element_info_alter(&$type) {
   // Decrease the default size of textfields.
   if (isset($type['textfield']['#maxlength'])) {
     $type['textfield']['#maxlength'] = 192;
   }
 }
-/*
-*/
+
