@@ -438,7 +438,7 @@ function islandora_scholar_add_pdfa_by_gs(AbstractObject $object, $file_uri, $ds
   $file_temp = file_create_filename('pdfa.'.time().'.pdf', 'temporary://');
   $derivative_file_uri = drupal_realpath($file_temp);
 
-  $command = $executable . " " . $exe_args . " -o $derivative_file_uri $source > /dev/null 2>&1 &";		// output to /dev/null not to let the PHP wait
+  $command = $executable . " " . $exe_args . " -o $derivative_file_uri $source ";
 
   exec($command, $execout, $returncode);
   $success = ($returncode === 0);
