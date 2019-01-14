@@ -255,13 +255,15 @@ function islandora_doi_transform_to_mods($doi_xml) {
                     break;
 
                   case 'subtitle':
-                    $article_subtitle = $mods->createElement('subTitle');
-                    if (!is_null($grandchild->firstChild)) {
-                      $article_subtitle_text = $mods->importNode($grandchild->firstChild, TRUE);
-                      $article_subtitle->appendChild($article_subtitle_text);
-                    }
-                    $titleinfo->appendChild($article_subtitle);
-                    break;
+                  if (variable_get('islandora_doi_insert_subtitle')){
+                        $article_subtitle = $mods->createElement('subTitle');
+                        if (!is_null($grandchild->firstChild)) {
+                          $article_subtitle_text = $mods->importNode($grandchild->firstChild, TRUE);
+                          $article_subtitle->appendChild($article_subtitle_text);
+                        }
+                        $titleinfo->appendChild($article_subtitle);
+                  }
+                  break;
 
                   case 'original_language_title':
                     $translated_titleinfo = $mods->createElement('titleInfo');
@@ -306,6 +308,8 @@ function islandora_doi_transform_to_mods($doi_xml) {
               }
 
               foreach ($child->getElementsByTagName('person_name') as $person) {
+              if ((strtolower($person->attributes['contributor_role']->nodeValue) != 'editor') || variable_get('islandora_doi_insert_editor')){
+                  
                 $name = $mods->createElement('name');
                 $mods->firstChild->appendChild($name);
                 $name_attribute = $mods->createAttribute('type');
@@ -367,22 +371,24 @@ function islandora_doi_transform_to_mods($doi_xml) {
                 foreach ($person->attributes as $att) {
                   switch ($att->nodeName) {
                     case 'contributor_role':
-                      $role = $mods->createElement('role');
-                      $name->appendChild($role);
-                      $roleterm = $mods->createElement('roleTerm');
-                      $role->appendChild($roleterm);
-                      $roleterm_text = $mods->createTextNode(strtolower($att->nodeValue));
-                      $roleterm->appendChild($roleterm_text);
-
-                      $roles = array('author', 'editor', 'translator');
-                      if (in_array(strtolower($att->nodeValue), $roles)) {
-                        $roleterm_attribute = $mods->createAttribute('authority');
-                        $roleterm_attribute->value = 'marcrelator';
-                        $roleterm->appendChild($roleterm_attribute);
-                        $roleterm_attribute = $mods->createAttribute('type');
-                        $roleterm_attribute->value = 'text';
-                        $roleterm->appendChild($roleterm_attribute);
-                      }
+//                      if ((strtolower($att->nodeValue) != 'editor') || variable_get('islandora_doi_insert_editor')){
+                          $role = $mods->createElement('role');
+                          $name->appendChild($role);
+                          $roleterm = $mods->createElement('roleTerm');
+                          $role->appendChild($roleterm);
+                          $roleterm_text = $mods->createTextNode(strtolower($att->nodeValue));
+                          $roleterm->appendChild($roleterm_text);
+    
+                          $roles = array('author', 'editor', 'translator');
+                          if (in_array(strtolower($att->nodeValue), $roles)) {
+                            $roleterm_attribute = $mods->createAttribute('authority');
+                            $roleterm_attribute->value = 'marcrelator';
+                            $roleterm->appendChild($roleterm_attribute);
+                            $roleterm_attribute = $mods->createAttribute('type');
+                            $roleterm_attribute->value = 'text';
+                            $roleterm->appendChild($roleterm_attribute);
+                          }
+  //                    }
                       break;
 
                     case 'sequence':
@@ -393,6 +399,7 @@ function islandora_doi_transform_to_mods($doi_xml) {
                       }
                   }
                 }
+              }
               }
               break;
 
@@ -469,7 +476,7 @@ function islandora_doi_transform_to_mods($doi_xml) {
                       break;
 
                     case 'resource':
-                      if (!is_null($identifier->firstChild)) {
+                      if (!is_null($identifier->firstChild) && variable_get('islandora_doi_insert_publisher')) {
                         $uri = $mods->createElement('identifier');
                         $mods->firstChild->appendChild($uri);
                         $uri_attribute = $mods->createAttribute('type');

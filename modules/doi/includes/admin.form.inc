@@ -30,7 +30,25 @@ function islandora_doi_admin_form(array $form, array &$form_state) {
       '#description' => t('An identifier to call yourself, for the OpenURL endpoint. To use this service you first need to register for an account here: http://www.crossref.org/requestaccount/'),
       '#default_value' => variable_get('islandora_doi_openurl_pid', 'user@example.com'),
     ),
-  );
+      'islandora_doi_insert_publisher' => array(
+          '#type' => 'checkbox',
+          '#title' => t('Insert Publisher URI in MODS'),
+          '#description' => t(''),
+          '#default_value' => variable_get('islandora_doi_insert_publisher', FALSE),
+      ),
+      'islandora_doi_insert_subtitle' => array(
+          '#type' => 'checkbox',
+          '#title' => t('Insert Subtitle URI in MODS'),
+          '#description' => t(''),
+          '#default_value' => variable_get('islandora_doi_insert_subtitle', FALSE),
+      ),
+      'islandora_doi_insert_editor' => array(
+          '#type' => 'checkbox',
+          '#title' => t('Insert Editor name in MODS'),
+          '#description' => t(''),
+          '#default_value' => variable_get('islandora_doi_insert_editor', FALSE),
+      ),
+   );
 
   return system_settings_form($form);
 }
