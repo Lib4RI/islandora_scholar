@@ -308,7 +308,7 @@ function islandora_doi_transform_to_mods($doi_xml) {
               }
 
               foreach ($child->getElementsByTagName('person_name') as $person) {
-              if ((strtolower($person->attributes['contributor_role']->nodeValue) != 'editor') || variable_get('islandora_doi_insert_editor')){
+              if ((strtolower($person->getAttribute('contributor_role')) != 'editor') || variable_get('islandora_doi_insert_editor')){
                   
                 $name = $mods->createElement('name');
                 $mods->firstChild->appendChild($name);
