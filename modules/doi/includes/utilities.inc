@@ -251,6 +251,9 @@ function islandora_doi_transform_to_mods($doi_xml) {
                 switch ($grandchild->nodeName) {
                   case 'title':
                     $article_title = $mods->importNode($grandchild, TRUE);
+                    $article_title->nodeValue = strip_tags($article_title->ownerDocument->saveXML($article_title),'<sub><sup>');
+                    $article_title->nodeValue = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", htmlspecialchars($article_title->nodeValue)));
+                    $article_title->nodeValue = preg_replace( "/\r|\n /", "", $article_title->nodeValue);
                     $titleinfo->appendChild($article_title);
                     break;
 
