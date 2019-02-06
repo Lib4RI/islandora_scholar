@@ -511,18 +511,18 @@ function islandora_doi_transform_to_mods($doi_xml) {
 
     if (!empty($pubdate_year)) {
       $date_value = $pubdate_year;
-      if (!empty($pubdate_month)) {
-        if (strlen($pubdate_month) == 1) {
-          $pubdate_month = "0" . $pubdate_month;
-        }
-        $date_value .= "-" . $pubdate_month;
-      }
-      if (!empty($pubdate_day)) {
-        if (strlen($pubdate_day) == 1) {
-          $pubdate_day = "0" . $pubdate_day;
-        }
-        $date_value .= "-" . $pubdate_day;
-      }
+//       if (!empty($pubdate_month)) {
+//         if (strlen($pubdate_month) == 1) {
+//           $pubdate_month = "0" . $pubdate_month;
+//         }
+//         $date_value .= "-" . $pubdate_month;
+//       }
+//       if (!empty($pubdate_day)) {
+//         if (strlen($pubdate_day) == 1) {
+//           $pubdate_day = "0" . $pubdate_day;
+//         }
+//         $date_value .= "-" . $pubdate_day;
+//       }
       $dateissued = $mods->createElement('dateIssued');
       $dateissued_attribute = $mods->createAttribute('encoding');
       $dateissued_attribute->value = 'w3cdtf';
