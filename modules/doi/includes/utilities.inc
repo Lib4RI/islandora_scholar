@@ -98,7 +98,7 @@ function islandora_doi_transform_to_mods($doi_xml) {
 //    $genre = $mods->createElement('genre');
 //    $genre->nodeValue = 'article';
 //    $mods->firstChild->appendChild($genre);
-
+    $abbrev_title_flag = 1;
     $relateditem = $mods->createElement('relatedItem');
     $mods->firstChild->appendChild($relateditem);
     $relateditem_attribute = $mods->createAttribute('type');
@@ -120,16 +120,19 @@ function islandora_doi_transform_to_mods($doi_xml) {
             break;
 
           case 'abbrev_title':
-            $titleinfo = $mods->createElement('titleInfo');
-            $titleinfo_attribute = $mods->createAttribute('type');
-            $titleinfo_attribute->value = 'abbreviated';
-            $titleinfo->appendChild($titleinfo_attribute);
-            $relateditem->appendChild($titleinfo);
-            $title = $mods->createElement('title');
-            $titleinfo->appendChild($title);
-            if (!is_null($child->firstChild)) {
-              $title_text = $mods->importNode($child->firstChild);
-              $title->appendChild($title_text);
+            if($abbrev_title_flag){
+                $titleinfo = $mods->createElement('titleInfo');
+                $titleinfo_attribute = $mods->createAttribute('type');
+                $titleinfo_attribute->value = 'abbreviated';
+                $titleinfo->appendChild($titleinfo_attribute);
+                $relateditem->appendChild($titleinfo);
+                $title = $mods->createElement('title');
+                $titleinfo->appendChild($title);
+                if (!is_null($child->firstChild)) {
+                  $title_text = $mods->importNode($child->firstChild);
+                  $title->appendChild($title_text);
+                }
+                $abbrev_title_flag = 0;
             }
             break;
 
