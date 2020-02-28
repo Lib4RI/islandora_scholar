@@ -31,15 +31,81 @@ function islandora_scholar_uninstall() {
     'islandora_scholar_romeo_enable',
     'islandora_scholar_thumbnail_width',
     'islandora_scholar_thumbnail_height',
+    'islandora_scholar_thumbnail_colorspace',
     'islandora_scholar_path_to_pdftotext',
     'islandora_scholar_preview_width',
     'islandora_scholar_preview_height',
+    'islandora_scholar_preview_colorspace',
     'islandora_scholar_issn_cache_time',
     'islandora_scholar_romeo_key',
     'islandora_scholar_romeo_url',
     'islandora_scholar_romeo_cache_time',
     'islandora_scholar_create_fulltext',
     'islandora_scholar_preview_density',
+    'islandora_scholar_google_scholar_metatags_enabled',
+    'islandora_scholar_google_scholar_search_enabled',
+    'islandora_scholar_google_scholar_primary_search_xpath',
+    'islandora_scholar_google_scholar_default_search_xpath',
+    'islandora_scholar_library_catalog_search_enabled',
+    'islandora_scholar_library_catalog_search_URL',
+    'islandora_scholar_library_catalog_search_params',
+    'islandora_scholar_library_catalog_primary_search_xpath',
+    'islandora_scholar_library_catalog_default_search_xpath',
+    'islandora_scholar_xpaths_abstract',
+    'islandora_scholar_xpaths_authors_xpath',
+    'islandora_scholar_xpaths_call-number',
+    'islandora_scholar_xpaths_collection-title',
+    'islandora_scholar_xpaths_container-title',
+    'islandora_scholar_xpaths_created_date',
+    'islandora_scholar_xpaths_dateCaptured',
+    'islandora_scholar_xpaths_date_issued',
+    'islandora_scholar_xpaths_degree_grantor',
+    'islandora_scholar_xpaths_department',
+    'islandora_scholar_xpaths_DOI',
+    'islandora_scholar_xpaths_edition',
+    'islandora_scholar_xpaths_embargo_date',
+    'islandora_scholar_xpaths_enabled',
+    'islandora_scholar_xpaths_end_page',
+    'islandora_scholar_xpaths_event',
+    'islandora_scholar_xpaths_event_place',
+    'islandora_scholar_xpaths_event_place_property',
+    'islandora_scholar_xpaths_event_property',
+    'islandora_scholar_xpaths_family',
+    'islandora_scholar_xpaths_genre',
+    'islandora_scholar_xpaths_given',
+    'islandora_scholar_xpaths_host_title',
+    'islandora_scholar_xpaths_ISBN',
+    'islandora_scholar_xpaths_issn',
+    'islandora_scholar_xpaths_issue',
+    'islandora_scholar_xpaths_local_author',
+    'islandora_scholar_xpaths_local_collection-editor',
+    'islandora_scholar_xpaths_local_container-author',
+    'islandora_scholar_xpaths_note',
+    'islandora_scholar_xpaths_number',
+    'islandora_scholar_xpaths_number-nihmsid',
+    'islandora_scholar_xpaths_number-pmcid',
+    'islandora_scholar_xpaths_number-pmid',
+    'islandora_scholar_xpaths_online_date',
+    'islandora_scholar_xpaths_origin_date',
+    'islandora_scholar_xpaths_pages',
+    'islandora_scholar_xpaths_part_date',
+    'islandora_scholar_xpaths_publisher',
+    'islandora_scholar_xpaths_publisher-place',
+    'islandora_scholar_xpaths_related_date',
+    'islandora_scholar_xpaths_role_term',
+    'islandora_scholar_xpaths_season',
+    'islandora_scholar_xpaths_start_page',
+    'islandora_scholar_xpaths_title',
+    'islandora_scholar_xpaths_title_nonsort',
+    'islandora_scholar_xpaths_title_subtitle',
+    'islandora_scholar_xpaths_title_sub_title',
+    'islandora_scholar_xpaths_types',
+    'islandora_scholar_xpaths_types_local_auth',
+    'islandora_scholar_xpaths_type_marcgt',
+    'islandora_scholar_xpaths_type_marcgt_host_titles',
+    'islandora_scholar_xpaths_type_marcgt_related',
+    'islandora_scholar_xpaths_URL',
+    'islandora_scholar_xpaths_volume',
   );
   array_walk($variables, 'variable_del');
 }
@@ -74,3 +140,29 @@ function islandora_scholar_update_7101(&$sandbox) {
 function islandora_scholar_update_7102(&$sandbox) {
   return t('The permission to administer the Islandora Scholar module has been changed to "Administer site configuration"; roles that could previously access Islandora Scholar management pages via the "Use the administration pages and help" permission will no longer be able to do so. Permissions may need to be reviewed.');
 }
+
+/**
+ * Maintain existing RGB colorspace profile configuration.
+ */
+function islandora_scholar_update_7103(&$sandbox) {
+  variable_set('islandora_scholar_preview_colorspace', 'RGB');
+  variable_set('islandora_scholar_thumbnail_colorspace', 'RGB');
+  $t = get_t();
+  return $t('Set colorspace configuration to RBG to maintain existing profile.');
+}
+
+/**
+ * Disable Islandora Google Scholar if it is currently enabled, since logic now lives in Islandora Scholar 
+ */
+function islandora_scholar_update_7104(&$sandbox) {
+  $module = array('islandora_google_scholar');
+  if (module_exists($module[0])) {
+    module_disable($module, FALSE);
+  }
+  db_delete('system')
+    ->condition('name', $module, 'IN')
+    ->condition('type', 'module')
+    ->execute();
+  return t('The Islandora Google Scholar submodule has been removed, and its functionality has been moved into the main Islandora Scholar module.');
+}
+

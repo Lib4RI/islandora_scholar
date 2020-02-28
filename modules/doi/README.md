@@ -1,9 +1,9 @@
 
-# Islandora Bibutils
+# Islandora DOI
 
 ## Introduction
 
-Provides a PHP interface to the bibutils tools.
+Support code for Digital Object Identifiers, to create citation objects.
 
 ## Requirements
 
@@ -16,24 +16,19 @@ This module requires the following modules/libraries:
 
 Install as usual, see [this](https://drupal.org/documentation/install/modules-themes/modules-7) for further information.
 
-Follow the instructions [here](http://sourceforge.net/p/bibutils/home/Bibutils/) to install Bibutils.
-
 ## Configuration
 
-Enable the module via Administration » Modules (admin/modules)
+By default, no configuration is required.
 
-## Troubleshooting/Issues
+If you wish to use the legacy CrossREF OpenURL endpoint, you must enable it and enter your "OpenURL PID" at `admin/islandora/solution_pack_config/scholar/islandora_doi`.
 
-Having problems or solved a problem? Check out the Islandora google groups for a solution.
-
-* [Islandora Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora)
-* [Islandora Dev Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora-dev)
+It is possible to change the URL against which content negotiation requests are made by changing the "DOI URL supporting content negotiation" URL at `admin/islandora/solution_pack_config/scholar/islandora_doi`.
 
 ## Maintainers/Sponsors
 
 Current maintainers:
 
-* [Don Richards](https://github.com/DonRichards)
+* [Bryan Brown](https://github.com/bryjbrown)
 
 ## Development
 

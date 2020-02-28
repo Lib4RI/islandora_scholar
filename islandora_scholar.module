@@ -12,7 +12,7 @@ function islandora_scholar_menu() {
   return array(
     'admin/islandora/solution_pack_config/scholar' => array(
       'title' => 'Scholar',
-      'description' => 'Configure scholar settings such as RoMEO and Google Search',
+      'description' => 'Configure Islandora Scholar settings such as RoMEO and Google Search',
       'type' => MENU_NORMAL_ITEM,
       'page callback' => 'drupal_get_form',
       'page arguments' => array('islandora_scholar_admin_form'),
@@ -22,6 +22,15 @@ function islandora_scholar_menu() {
     'admin/islandora/solution_pack_config/scholar/base' => array(
       'title' => 'Basic Configuration',
       'type' => MENU_DEFAULT_LOCAL_TASK,
+    ),
+    'admin/islandora/solution_pack_config/scholar/xpaths' => array(
+      'title' => 'XPath Configuration',
+      'description' => 'Configure Islandora Scholar XPaths',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('islandora_scholar_admin_xpath_form'),
+      'access arguments' => array('administer site configuration'),
+      'file' => 'includes/admin.form.inc',
     ),
     'admin/islandora/solution_pack_config/scholar/pdf' => array(
       'title' => 'PDF Configuration',
@@ -58,6 +67,43 @@ function islandora_scholar_menu() {
       'access arguments' => array(2),
       'file' => 'includes/callbacks.inc',
     ),
+    'gs_years' => array(
+      'title' => 'Scholarly article publications by year',
+      'page callback' => '_islandora_google_scholar_page_years',
+      'file' => 'includes/page_callbacks.inc',
+      'access arguments' => array(
+        'access content',
+      ),
+      'type' => MENU_CALLBACK,
+    ),
+    'gs_updated' => array(
+      'title' => 'Google Scholar Articles Added/Updated',
+      'page callback' => '_islandora_google_scholar_updated',
+      'file' => 'includes/page_callbacks.inc',
+      'access arguments' => array(
+        'access content',
+      ),
+      'type' => MENU_CALLBACK,
+    ),
+    'gs_year' => array(
+      'title' => 'Google Scholar Year',
+      'page callback' => '_islandora_google_scholar_page_year',
+      'file' => 'includes/page_callbacks.inc',
+      'access arguments' => array(
+        'access content',
+      ),
+      'type' => MENU_CALLBACK,
+    ),
+    'gs_abstract/%' => array(
+      'title' => 'Abstract',
+      'page callback' => '_islandora_google_scholar_abstract',
+      'page arguments' => array(1),
+      'file' => 'includes/page_callbacks.inc',
+      'access arguments' => array(
+        'access content',
+      ),
+      'type' => MENU_CALLBACK,
+    ),
   );
 }
 
@@ -90,6 +136,7 @@ function islandora_scholar_xml_form_builder_form_associations() {
       'dsid' => 'MODS',
       'title_field' => array('titleInfo', 'title'),
       'transform' => 'mods_to_dc.xsl',
+      'self_transform' => 'islandora_cleanup_mods_extended.xsl',
       'template' => FALSE,
     ),
     'islandora_thesis_mods_form' => array(
@@ -98,6 +145,7 @@ function islandora_scholar_xml_form_builder_form_associations() {
       'dsid' => 'MODS',
       'title_field' => array('titleInfo', 'title'),
       'transform' => 'mods_to_dc.xsl',
+      'self_transform' => 'islandora_cleanup_mods_extended.xsl',
       'template' => FALSE,
     ),
   );
@@ -186,6 +234,11 @@ function islandora_scholar_islandora_required_objects(IslandoraTuque $connection
  */
 function islandora_scholar_ir_citationCModel_islandora_view_object($object) {
   module_load_include('inc', 'islandora_scholar', 'includes/utilities');
+  if (variable_get('islandora_scholar_google_scholar_metatags_enabled', TRUE)) {
+    module_load_include('inc', 'islandora_scholar', 'includes/google_scholar');
+    $tags = islandora_scholar_create_meta_tags($object);
+    islandora_scholar_embed_tags($tags);
+  }
   return islandora_scholar_get_view($object);
 }
 
@@ -194,6 +247,11 @@ function islandora_scholar_ir_citationCModel_islandora_view_object($object) {
  */
 function islandora_scholar_ir_thesisCModel_islandora_view_object($object) {
   module_load_include('inc', 'islandora_scholar', 'includes/utilities');
+  if (variable_get('islandora_scholar_google_scholar_metatags_enabled', TRUE)) {
+    module_load_include('inc', 'islandora_scholar', 'includes/google_scholar');
+    $tags = islandora_scholar_create_meta_tags($object);
+    islandora_scholar_embed_tags($tags);
+  }
   return islandora_scholar_get_view($object);
 }
 
