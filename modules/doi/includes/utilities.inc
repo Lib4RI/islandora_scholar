@@ -188,7 +188,7 @@ function islandora_doi_crossref_translator($crossref_data) {
 
   // Add metadata for journal articles.
 //<<<<<<< HEAD
-  foreach ($doi_xml->getElementsByTagName('journal') as $journal) {
+  foreach ($crossref_xml->getElementsByTagName('journal') as $journal) {
 //    $genre = $mods->createElement('genre');
 //    $genre->nodeValue = 'article';
 //    $mods->firstChild->appendChild($genre);
