@@ -77,7 +77,7 @@ function citeproc_lookup_language($language) {
 function citeproc_deep_array_filter_xss(&$array) {
   // @codingStandardsIgnoreStart
   $func = function ($item) use (&$func) {
-    return is_array($item) ? array_map($func, $item) : filter_xss($item);
+      return is_array($item) ? array_map($func, $item) : filter_xss($item, array('br', 'span', 'i', 'mark','small','del','ins','sub', 'sup', 'a', 'em', 'strong', 'cite', 'blockquote', 'code', 'ul', 'ol', 'li', 'dl', 'dt', 'dd'));
   };
   // @codingStandardsIgnoreEnd
 
