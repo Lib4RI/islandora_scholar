@@ -22,6 +22,33 @@ function convert_mods_to_citeproc_jsons_escape(&$item, $key) {
   }
 }
 
+/*
+ * Auxiliary function to get different possible xPaths to the MODS element with the page numbers.
+ * 
+ * 2020-07-30/fh: Right now the place of the page numbers depends on the publication type
+ * and on the institute's site as well. There also may be exceptions for a single MODS.
+ * So until everything is synchronized better several paths should be checked.
+ *
+ * Also see:  - http://lib-dora-dev1.emp-eaw.ch:3000/issues/46
+ *            - https://www.wiki.lib4ri.ch/pages/viewpage.action?pageId=21889177
+ */
+function citeproc_mods_pages_xpath_list() {
+  $xPathAry = array(
+	"//mods:mods[1]/mods:relatedItem[@type='host']/mods:part/mods:extent[@unit='pages']",
+	"//mods:mods[1]/mods:relatedItem[@type='host']/mods:part/mods:extent[@unit='page']",
+	"//mods:mods[1]/mods:physicalDescription/mods:extent[@unit='pages']",
+	"//mods:mods[1]/mods:physicalDescription/mods:extent[@unit='page']",
+	"//mods:mods[1]/mods:part/mods:extent[@unit='pages']", /* this is the (former) default of the 'islandora_scholar_xpaths_pages' variable */
+	"//mods:mods[1]/mods:part/mods:extent[@unit='page']",
+  );
+  if ( variable_get('islandora_scholar_xpaths_enabled',FALSE) ) {
+    if ( ( $xPath = trim(variable_get('islandora_scholar_xpaths_pages','')) ) && !empty($xPath) && !in_array($xPath,$xPathAry) ) {
+      array_unshift( $xPathAry, $xPath );	// if user-specified then add it at the beginning
+    }
+  }
+  return $xPathAry;
+}
+
 /**
  * Add the MODS namespace to the given element, if it isn't already there.
  */
@@ -504,17 +531,13 @@ function convert_mods_to_citeproc_json_note(SimpleXMLElement $mods) {
  */
 function convert_mods_to_citeproc_json_page(SimpleXMLElement $mods) {
   $output = NULL;
-//<<<<<<< HEAD
-  $pages = $mods->xpath("//mods:mods[1]/mods:relatedItem[@type='host']/mods:part/mods:extent[@unit='page']");
-// =======
-//   $pages = $mods->xpath(variable_get('islandora_scholar_xpaths_pages', '//mods:mods[1]/mods:part/mods:extent[@unit="pages"]'));
-// >>>>>>> upstream/7.x
-  // Note: "pages" is correct, but Zotero uses "page".
-  if (empty($pages)) {
-    $pages = $mods->xpath('//mods:mods[1]/mods:part/mods:extent[@unit="page"]');
+  $pages = NULL;
+  foreach( citeproc_mods_pages_xpath_list() as $xPath ) {
+	if ( ( $xPage = $mods->xpath($xPath) ) && @!empty($xPage[0]) ) {
+	  $pages = $xPage[0];		// $xPage is an array and $xPage[0] is a SimpleXMLElement
+	  break;
+	}
   }
-
-  $pages = (!empty($pages) ? $pages[0] : NULL);
   if ($pages) {
     add_mods_namespace($pages);
 
@@ -555,12 +578,12 @@ function convert_mods_to_citeproc_json_page(SimpleXMLElement $mods) {
  *   The number of pages for the citation.
  */
 function convert_mods_to_citeproc_json_no_of_pages(SimpleXMLElement $mods) {
-	// the attribute 'unit' has either 'page' or 'pages' as value, depending on the publication type:
-	$pages = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:physicalDescription/mods:extent[@unit="page"]');
-	if (empty($pages)) {
-		$pages = convert_mods_to_citeproc_json_query($mods, '//mods:mods[1]/mods:physicalDescription/mods:extent[@unit="pages"]');
+  foreach( citeproc_mods_pages_xpath_list() as $xI => $xPath ) {
+    if ( ( $pages = convert_mods_to_citeproc_json_query($mods,$xPath) ) && !empty(trim($pages)) ) {
+	  return $pages;		// $pages is a string
 	}
-	return $pages;
+  }
+  return NULL;
 }
 /**
  * Gets the type property for the Citation.
