@@ -22,12 +22,18 @@ This module requires the following modules/libraries:
 * [Bibutils](https://github.com/Islandora/islandora_scholar/tree/7.x/modules/bibutils) (included in /modules)
 * [Citeproc](https://github.com/Islandora/islandora_scholar/tree/7.x/modules/citeproc) (included in /modules)
 * [CSL](https://github.com/Islandora/islandora_scholar/tree/7.x/modules/csl) (included in /modules)
-
+* [TCPDF](https://github.com/tecnickcom/TCPDF)
 
 The Citeproc module depends on the [citeproc-php](https://github.com/Islandora/citeproc-php) library, which should be installed in the `sites/all/libraries` directory, such that the main `CiteProc.php` file is located at `sites/all/libraries/citeproc-php/CiteProc.php`. More information is available in [Citeproc's README.md file](https://github.com/Islandora/islandora_scholar/blob/7.x/modules/citeproc/README.md).
 
 The Bibutils module depends on Bibutils, a command-line tool which must be installed on the server. More information is available in [Bibutils' README.md file](https://github.com/Islandora/islandora_scholar/tree/7.x/modules/bibutils).
 
+For the 'Exporter' sub-module the [TCPDF](https://github.com/tecnickcom/TCPDF) library should be cloned into your site's libraries folder. After its successful installation it will listed in: Admin ==&gt; Reports ==&gt; Libraries
+```
+cd /var/www/html/sites/all/libraries
+sudo /usr/bin/git clone https://github.com/tecnickcom/TCPDF.git TCPDF/
+sudo chown apache:apache -R ./TCPDF
+```
 
 ## Installation
 
