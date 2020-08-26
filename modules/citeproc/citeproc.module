@@ -140,11 +140,13 @@ function citeproc_get_citeproc_php_instance($style) {
  *   The markup for the bibliography, as given by citeproc::render().
  */
 function citeproc_bibliography_from_object($style, $raw) {
-  $citeproc = citeproc_get_citeproc_php_instance($style);
-  if (variable_get('citeproc_backend') == CITEPROC_BACKEND_V2) {
-    $raw = array($raw);
+  if ( $citeproc = citeproc_get_citeproc_php_instance($style) ) {
+    if (variable_get('citeproc_backend') == CITEPROC_BACKEND_V2) {
+      $raw = array($raw);
+    }
+    return $citeproc->render($raw, 'bibliography');
   }
-  return $citeproc->render($raw, 'bibliography');
+  return '';
 }
 
 /**
@@ -190,6 +192,9 @@ function citeproc_bibliography_from_mods($style, $mods) {
   $raw = convert_mods_to_citeproc_jsons($mods);
   $raw = _citeproc_array_to_object($raw);
 
+  if ( variable_get('citeproc_csl_tune_lib4ri',true) ) {	// lib4ri-custom:
+    return preg_replace('/,\s*\(/',' (',str_replace(',;',';',str_replace(',.',',',str_replace(',,',',',citeproc_bibliography_from_object($style, $raw)))));
+  }
   return citeproc_bibliography_from_object($style, $raw);
 }
 
@@ -213,5 +218,8 @@ function citeproc_citation_from_mods($style, $mods) {
   $raw = convert_mods_to_citeproc_jsons($mods);
   $raw = _citeproc_array_to_object($raw);
 
+  if ( variable_get('citeproc_csl_tune_lib4ri',true) ) {	// lib4ri-custom:
+    return preg_replace('/,\s*\(/',' (',str_replace(',;',';',str_replace(',.',',',str_replace(',,',',',citeproc_citation_from_object($style, $raw)))));
+  }
   return citeproc_citation_from_object($style, $raw);
 }
