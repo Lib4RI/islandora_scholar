@@ -192,8 +192,9 @@ function citeproc_bibliography_from_mods($style, $mods) {
   $raw = convert_mods_to_citeproc_jsons($mods);
   $raw = _citeproc_array_to_object($raw);
 
-  if ( variable_get('citeproc_csl_tune_lib4ri',true) ) {	// lib4ri-custom:
-    return preg_replace('/,\s*\(/',' (',str_replace(',;',';',str_replace(',.',',',str_replace(',,',',',citeproc_bibliography_from_object($style, $raw)))));
+  if ( variable_get('citeproc_csl_tune_lib4ri',true) ) {	// lib4ri-custom, see: http://lib-dora-dev1.emp-eaw.ch:3000/issues/394
+	$tmp = str_replace('?.','?',str_replace('?</span>.','?</span>',citeproc_bibliography_from_object($style, $raw))); // to tune title
+    return preg_replace('/,\s*\(/',' (',str_replace(',;',';',str_replace(',.',',',str_replace(',,',',',$tmp)))); // for names
   }
   return citeproc_bibliography_from_object($style, $raw);
 }
@@ -218,8 +219,9 @@ function citeproc_citation_from_mods($style, $mods) {
   $raw = convert_mods_to_citeproc_jsons($mods);
   $raw = _citeproc_array_to_object($raw);
 
-  if ( variable_get('citeproc_csl_tune_lib4ri',true) ) {	// lib4ri-custom:
-    return preg_replace('/,\s*\(/',' (',str_replace(',;',';',str_replace(',.',',',str_replace(',,',',',citeproc_citation_from_object($style, $raw)))));
+  if ( variable_get('citeproc_csl_tune_lib4ri',true) ) {	// lib4ri-custom, see: http://lib-dora-dev1.emp-eaw.ch:3000/issues/394
+	$tmp = str_replace('?.','?',str_replace('?</span>.','?</span>',citeproc_citation_from_object($style, $raw))); // to tune title
+    return preg_replace('/,\s*\(/',' (',str_replace(',;',';',str_replace(',.',',',str_replace(',,',',',$tmp)))); // for names
   }
   return citeproc_citation_from_object($style, $raw);
 }
