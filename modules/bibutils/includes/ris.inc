@@ -289,8 +289,14 @@ class RIS {
       $names->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
       $given  = $names->xpath(variable_get('islandora_scholar_xpaths_given', 'mods:namePart[@type = "given" ]'));
       $family = $names->xpath(variable_get('islandora_scholar_xpaths_family', 'mods:namePart[@type = "family"]'));
-      if (!empty($given[0]) && !empty($family[0])) {
-        $this->text .= "$field - {$family[0]}, {$given[0]}.\n";
+      if ( /* !empty($given[0]) && */ !empty($family[0])) { // there always should be a given name though
+		// 2020-09-07/fh:
+		// - Based on short tests Endnote only supports/shows the *first* author in a nice way if he/it has no given name,
+		//   further authors listed in Endnote will then however have an unneeded comma attached if they have no given name.
+		// - If the given name is just a single letter, Endnote will automatically attach a dot/period if missing.
+		// - After each 'author row' there is dot/period added (even if it's not an initial) - not really sure why, however
+		//   Endnote at least seems to be able to handle it correctly.
+        $this->text .= "$field  - {$family[0]}, {$given[0]}.\n"; // two spaces in front of the dash!
       }
     }
   }
