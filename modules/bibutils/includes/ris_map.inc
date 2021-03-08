@@ -13,14 +13,18 @@
  *
  * @return array
  *   The RIS field to MODS XPath mapping.
+ * 
+ * Revised Feb-2021 for Lib4RI, see Excel file in Redmine Issue #217
  */
 function bibutils_ris_field_map() {
   // XXX: Some comments go past 80 columns... Let's leave 'em be, for now.
   // @codingStandardsIgnoreStart
   return array(
     "TY" => "mods:genre",
-    "A2" => "mods:relatedItem[@type = 'host']/mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'author']/mods:namePart",
+/*  "A2" => "mods:relatedItem[@type = 'host']/mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'author']/mods:namePart", */
+    "A2" => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
     // "A3" => "Tertiary Author (each author on its own line preceded by the tag)",
+    "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']/mods:namePart",
     // "A4" => "Subsidiary Author (each author on its own line preceded by the tag)",
     "AB" => "mods:abstract[not(@displayLabel) or @displayLabel = 'combined-all-export']",
     // "AD" => "Author Address",
@@ -51,11 +55,17 @@ function bibutils_ris_field_map() {
     "LA" => "mods:language/mods:languageTerm",
     // "LB" => "Label",
     // "M1" => "Number",
-    "M3" => "mods:note[@type = 'type of work']",
+/*  "M3" => "mods:note[@type = 'type of work']",		*/
+    "M3" => array(
+		'THES' => "mods:genre", /* only for THESis type, other publications types won't get this */
+	),
     // "N1" => "Notes",
     // "NV" => "Number of Volumes",
     // "OP" => "Original Publication",
-    "PB" => "mods:originInfo/mods:publisher",
+    "PB" => array(
+		'aux'  => "mods:originInfo/mods:publisher",
+		'THES' => "mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'Degree grantor']/mods:namePart", /* only for THESis type */
+	),
     "PY" => "mods:originInfo/mods:dateIssued",
     "RI" => "mods:note[@type = 'peer reviewed']",
     // "RN" => "Research Notes",
@@ -75,7 +85,7 @@ function bibutils_ris_field_map() {
     "ED" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
     // ID added at export time for getting PID.
     "ID" => "mods:identifier[@type = 'id export']",
-    "ER" => "",
+/*  "ER" => "",	*/
   );
   // @codingStandardsIgnoreEnd
 }

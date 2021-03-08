@@ -303,12 +303,13 @@ class RIS {
       $family = $names->xpath(variable_get('islandora_scholar_xpaths_family', 'mods:namePart[@type = "family"]'));
       if ( /* !empty($given[0]) && */ !empty($family[0])) { // there always should be a given name though
 		// 2020-09-07/fh:
-		// - Based on short tests Endnote only supports/shows the *first* author in a nice way if he/it has no given name,
+		// - Based on short tests Endnote only supports/shows the *first* author in a nice way if there is no given name,
 		//   further authors listed in Endnote will then however have an unneeded comma attached if they have no given name.
 		// - If the given name is just a single letter, Endnote will automatically attach a dot/period if missing.
 		// - After each 'author row' there is dot/period added (even if it's not an initial) - not really sure why, however
 		//   Endnote at least seems to be able to handle it correctly.
-        $this->text .= "$field  - {$family[0]}, {$given[0]}.\n"; // two spaces in front of the dash!
+        $this->text .= $field . "  - " . $family[0] . ( @empty($given[0]) ? '' : ', '.$given[0] ) . ( @strlen($given[0]) == 1 ? '.' : '' ) . "\n";
+        // two spaces in front of the dash!
       }
     }
   }
@@ -331,35 +332,51 @@ class RIS {
 
       foreach ($mods_records as $mods_record) {
         $mods_record->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
-        foreach ($this->map as $field => $xpath) {
+        $map_data = $this->map;
+        $type_record = '';
+        if ( @!empty($map_data['TY']) ) { // there always should be a xpath for TYpe though:
+          $data = $mods_record->xpath($map_data['TY']);
+          $type_record = isset($data[0]) ? $this->getType($data[0]) : 'STD';
+        }
+        foreach ($map_data as $field => $xData) {
           if (array_key_exists($field, $this->allowedFields)) {
             if ($field == "TY") {
-              $data = $mods_record->xpath($xpath);
-              $value = isset($data[0]) ? $this->getType($data[0]) : 'STD';
-              $this->text .= "$field  - $value\n";
+              $this->text .= "{$field}  - {$type_record}\n";
               continue;
             }
-            if ($field == "ER") {
-              $this->text .= "$field  - \n\n\n";
-              continue;
-            }
+            $xpath = ''; // to be a string
+            if ( !is_array($xData) ) {
+              $xpath = $xData;
+            } elseif ( @!empty($xData[$type_record]) ) {
+              $xPath = $xData[$type_record];
+            } elseif ( @!empty($xData['aux']) ) {
+              $xPath = $xData['aux'];
+		    } else { continue; }
+
             $data = $mods_record->xpath($xpath);
             foreach ($data as $key => $val) {
-              $value = trim($val);
               if ($field == "AU" || $field == "ED") {
                 $this->renderName($data[$key], $field);
+              } else {
+                $value = trim($val);
+                if ($field == "DA") {
+                  $value = rtim( $this->getDate($value), '.');
+                }
+                elseif ($field == "PY") {
+                  $value = rtrim( $this->getYear($value), '.');
+                }
+                elseif ($field == "TI" || $field == "AB") {
+                  if ( substr($value,-2) == '..' && substr($value,-3) != '...' ) {
+                    $value = substr($value,0,-1);
+                  }
+                }
+                elseif ( $field == 'CY' ) { // see Excel file, Redmine Issue #217
+                  $value = rtrim( $value, '.');
+                }
               }
-              elseif ($field == "DA") {
-                $value = $this->getDate($value);
-              }
-              elseif ($field == "PY") {
-                $value = $this->getYear($value);
-              }
-
               if (!empty($value)) {
                 $this->text .= "$field  - $value\n";
               }
-
               if (!in_array($field, $this->repeatFields)) {
                 break;
               }
