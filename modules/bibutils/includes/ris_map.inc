@@ -15,16 +15,153 @@
  *   The RIS field to MODS XPath mapping.
  * 
  * Revised Feb-2021 for Lib4RI, see Excel file in Redmine Issue #217
+ * 
+ * Solr test query of currently stored values (here academic titles):
+ * http://lib-dora-dev1.emp-eaw.ch:8080/solr/collection1/select?wt=csv&indent=true&csv.separator=%7c&sort=PID+asc&rows=987654321&q=PID:*%5C%3A*+AND+mods_note_academic%5C%20title_mt:*&fl=PID%2c+mods_note_academic?title_mt
  */
+function bibutils_ris_field_map_feb21() {
+  // XXX: Some comments go past 80 columns... Let's leave 'em be, for now.
+  // @codingStandardsIgnoreStart
+  return array(
+    "TY" => "mods:genre", /* required field */
+
+    "A2" => array(
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
+      '_any'  => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
+	),
+    "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']/mods:namePart",
+ // "A4" => "Subsidiary Author (each author on its own line preceded by the tag)",
+    "AB" => "mods:abstract[not(@displayLabel) or @displayLabel = 'combined-all-export']",
+ // "AD" => "Author Address",
+    "AN" => "mods:identifier[@type = 'accession']",
+    "AU" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'author']",
+ // "C2" => "Custom 2",
+ // "C3" => "Custom 3",
+ // "C4" => "Custom 4",
+ // "C5" => "Custom 5",
+ // "C6" => "Custom 6",
+ // "C7" => "Custom 7",
+ // "C8" => "Custom 8",
+ // "CA" => "Caption",
+ // "CN" => "Call Number",
+    "C1" => array(
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:place/mods:placeTerm",
+    ),       
+    "CY" => array(
+      'CHAP' => "mods:relatedItem[@type = 'host']/mods:place/mods:placeTerm",
+      'CONF' => "mods:originInfo[@eventType = 'conference']/mods:place/mods:placeTerm",
+      '_any' => "mods:originInfo/mods:place/mods:placeTerm",
+    ),       
+ // "DA" => "mods:originInfo/mods:dateIssued",
+    "DA" => array(
+      'CONF' => "mods:originInfo[@eventType = 'conference']/mods:dateOther[@type = 'conferenceDate']",
+      'CPAPER' => "mods:originInfo/mods:dateOther[@type = 'conferenceDate']",
+    ),
+ // "DB" => "Name of Database",
+    "DO" => "mods:identifier[@type = 'doi']",
+ // "DP" => "Database Provider",
+    "ET" => "mods:originInfo/mods:edition",
+    "IS" => "mods:relatedItem[@type = 'host']/mods:part/mods:detail[@type = 'issue']/mods:number",
+    "J2" => "mods:relatedItem[@type = 'host']/mods:titleInfo[@type='abbreviated']/mods:title",
+    "KW" => array(
+      'MGZN' => "mods:subject or mods:topic",
+      '_any' => "mods:note[@type = 'keywords']",
+	),
+ // "L1" => "File Attachments (this is a link to a local file on the users system not a URL link)",
+ // "L4" => "Figure (this is also meant to be a link to a local file on the users's system and not a URL link)",
+    "LA" => "mods:language/mods:languageTerm",
+ // "LB" => "Label",
+    "M1" => "mods:relatedItem[@type = 'series']/mods:titleInfo/mods:partNumber", /* see also T3 */
+    "M3" => array(
+      'THES' => "mods:genre", /* only for THESis type, other publications types won't get this */
+	),
+ // "N1" => "Notes",
+ // "NV" => "Number of Volumes",
+ // "OP" => "Original Publication",
+    "PB" => array(
+      'CHAP' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",
+      'THES' => "mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'Degree grantor']/mods:namePart",
+      '_any' => "mods:originInfo/mods:publisher",
+	),
+    "PY" => "mods:originInfo/mods:dateIssued",
+    "RI" => "mods:note[@type = 'peer reviewed']",
+ // "RN" => "Research Notes",
+ // "RP" => "Reprint Edition",
+ // "SE" => "Section",
+    "SN" => "mods:identifier[@type = 'issn' or @type = 'isbn']",
+    "SP" => array(
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
+      'JOUR' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
+      'MGZN' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
+      'CHAP' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
+      '_any' => "mods:physicalDescription/mods:extent[starts-with(@unit, 'page')]",
+	),
+    "EP" => array(
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
+      'JOUR' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
+      'MGZN' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
+      'CHAP' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
+      /* see https://www.wiki.lib4ri.ch/pages/viewpage.action?pageId=21889177 */
+	),
+ // "ST" => "Short Title",
+    "T2" => array(
+      'CONF' => "mods:name[@type = 'conference']",
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",
+      '_any' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",
+    ),
+    "T3" => array(
+      'CHAP' => "mods:relatedItem[@type = 'host']/mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:relatedItem[@type = 'series']/mods:titleInfo[not(@type)]/mods:title",
+      '_any' => "mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",
+	),
+ // "TA" => "Translated Author",
+    "TI" => "mods:titleInfo/mods:title",
+ // "TT" => "Translated Title",
+    "UR" => "mods:identifier[@type = 'uri']",
+    "VL" => array(
+      'THES' => "mods:note[@type = 'academic title']/mods:part/mods:detail[@type = 'volume']/mods:number",	/* re-ask Jochen */
+      '_any' => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",	/* usually for VOLUME !? */
+	),
+    "SV" => array(
+      'CHAP' => "mods:relatedItem[@type='host']/mods:relatedItem[@type = 'series']/mods:titleInfo/mods:partNumber",
+      'CPAPER' => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",
+	),
+ // "Y2" => "Access Date",
+    "ED" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
+    // ID added at export time for getting PID.
+    "ID" => "mods:identifier[@type = 'id export']",
+
+    "ER" => "",	/* Required field to mark the end of a data set of one publication */
+  );
+  // @codingStandardsIgnoreEnd
+}
+
+
+
 function bibutils_ris_field_map() {
+	
+  // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  if ( function_exists('bibutils_ris_field_map_feb21') ) {	 // TEST/fh Feb 2021
+    $roleList = variable_get('lib4ri_ris_feb2021','repo manager, administrator');
+	if ( empty($roleList) || trim($roleList) == 'all' ) {
+      return bibutils_ris_field_map_feb21();
+    }
+    global $user;
+    foreach( explode(',',$roleList) as $role ) {
+      if ( in_array(trim($role),array_values($user->roles)) ) {
+        return bibutils_ris_field_map_feb21();
+      }
+	}
+  }
+  // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
   // XXX: Some comments go past 80 columns... Let's leave 'em be, for now.
   // @codingStandardsIgnoreStart
   return array(
     "TY" => "mods:genre",
-/*  "A2" => "mods:relatedItem[@type = 'host']/mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'author']/mods:namePart", */
-    "A2" => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
+    "A2" => "mods:relatedItem[@type = 'host']/mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'author']/mods:namePart",
     // "A3" => "Tertiary Author (each author on its own line preceded by the tag)",
-    "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']/mods:namePart",
     // "A4" => "Subsidiary Author (each author on its own line preceded by the tag)",
     "AB" => "mods:abstract[not(@displayLabel) or @displayLabel = 'combined-all-export']",
     // "AD" => "Author Address",
@@ -55,17 +192,11 @@ function bibutils_ris_field_map() {
     "LA" => "mods:language/mods:languageTerm",
     // "LB" => "Label",
     // "M1" => "Number",
-/*  "M3" => "mods:note[@type = 'type of work']",		*/
-    "M3" => array(
-		'THES' => "mods:genre", /* only for THESis type, other publications types won't get this */
-	),
+    "M3" => "mods:note[@type = 'type of work']",
     // "N1" => "Notes",
     // "NV" => "Number of Volumes",
     // "OP" => "Original Publication",
-    "PB" => array(
-		'aux'  => "mods:originInfo/mods:publisher",
-		'THES' => "mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'Degree grantor']/mods:namePart", /* only for THESis type */
-	),
+    "PB" => "mods:originInfo/mods:publisher",
     "PY" => "mods:originInfo/mods:dateIssued",
     "RI" => "mods:note[@type = 'peer reviewed']",
     // "RN" => "Research Notes",
@@ -85,7 +216,7 @@ function bibutils_ris_field_map() {
     "ED" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
     // ID added at export time for getting PID.
     "ID" => "mods:identifier[@type = 'id export']",
-/*  "ER" => "",	*/
+    "ER" => "",
   );
   // @codingStandardsIgnoreEnd
 }

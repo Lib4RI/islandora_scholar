@@ -97,7 +97,7 @@ class RIS {
    *
    * @var array
    */
-  protected $requiredFields = array("TY", "ER");
+  protected $requiredFields = array( "TY", "ER" );
 
   /**
    * Specifies which RIS fields are repeatable
@@ -191,7 +191,7 @@ class RIS {
   protected function __construct($map) {
     $missing = FALSE;
     foreach ($this->requiredFields as $field) {
-      if (!isset($map[$field])) {
+      if ( !isset($map[$field]) ) {
         $missing = TRUE;
       }
     }
@@ -340,43 +340,47 @@ class RIS {
         }
         foreach ($map_data as $field => $xData) {
           if (array_key_exists($field, $this->allowedFields)) {
-            if ($field == "TY") {
+            if ($field == "TY") { // required field
               $this->text .= "{$field}  - {$type_record}\n";
               continue;
             }
+            if ($field == "ER") { // required field
+              $this->text .= "$field  - \n\n\n";
+              continue;
+            }
+
             $xpath = ''; // to be a string
             if ( !is_array($xData) ) {
               $xpath = $xData;
             } elseif ( @!empty($xData[$type_record]) ) {
               $xPath = $xData[$type_record];
-            } elseif ( @!empty($xData['aux']) ) {
-              $xPath = $xData['aux'];
-		    } else { continue; }
+            } elseif ( @!empty($xData['_any']) ) {
+              $xPath = $xData['_any'];
+		    } else {
+              continue;
+            }
+            if ( !( $data = $mods_record->xpath($xpath) ) ) {
+              if ( is_array($xData) && @!empty($xData['_aux']) ) {
+                $data = $mods_record->xpath($xData['_aux']);
+              }
+            }
 
-            $data = $mods_record->xpath($xpath);
             foreach ($data as $key => $val) {
+              $value = trim($val);
               if ($field == "AU" || $field == "ED") {
                 $this->renderName($data[$key], $field);
-              } else {
-                $value = trim($val);
-                if ($field == "DA") {
-                  $value = rtim( $this->getDate($value), '.');
-                }
-                elseif ($field == "PY") {
-                  $value = rtrim( $this->getYear($value), '.');
-                }
-                elseif ($field == "TI" || $field == "AB") {
-                  if ( substr($value,-2) == '..' && substr($value,-3) != '...' ) {
-                    $value = substr($value,0,-1);
-                  }
-                }
-                elseif ( $field == 'CY' ) { // see Excel file, Redmine Issue #217
-                  $value = rtrim( $value, '.');
-                }
               }
+              elseif ($field == "DA") { // for date issued
+                $value = rtrim( $this->getDate($value), '.');
+              }
+              elseif ($field == "PY") { // = publishing year
+                $value = rtrim( $this->getYear($value), '.');
+              }
+
               if (!empty($value)) {
                 $this->text .= "$field  - $value\n";
               }
+
               if (!in_array($field, $this->repeatFields)) {
                 break;
               }
