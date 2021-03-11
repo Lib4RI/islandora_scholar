@@ -25,16 +25,19 @@ function bibutils_ris_field_map_feb21() {
   return array(
     "TY" => "mods:genre", /* required field */
 
+    "TI" => "mods:titleInfo/mods:title",
+    "AU" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'author']",
+    "PY" => "mods:originInfo/mods:dateIssued",
+
     "A2" => array(
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
-      '_any'  => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
-	),
+      '_aux'  => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
+ 	),
     "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']/mods:namePart",
  // "A4" => "Subsidiary Author (each author on its own line preceded by the tag)",
     "AB" => "mods:abstract[not(@displayLabel) or @displayLabel = 'combined-all-export']",
  // "AD" => "Author Address",
     "AN" => "mods:identifier[@type = 'accession']",
-    "AU" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'author']",
  // "C2" => "Custom 2",
  // "C3" => "Custom 3",
  // "C4" => "Custom 4",
@@ -45,17 +48,17 @@ function bibutils_ris_field_map_feb21() {
  // "CA" => "Caption",
  // "CN" => "Call Number",
     "C1" => array(
-      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:place/mods:placeTerm",
+      '_any' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:place/mods:placeTerm",	/* typical for 'CPAPER' */
     ),       
     "CY" => array(
       'CHAP' => "mods:relatedItem[@type = 'host']/mods:place/mods:placeTerm",
       'CONF' => "mods:originInfo[@eventType = 'conference']/mods:place/mods:placeTerm",
-      '_any' => "mods:originInfo/mods:place/mods:placeTerm",
+      '_aux' => "mods:originInfo/mods:place/mods:placeTerm",
     ),       
- // "DA" => "mods:originInfo/mods:dateIssued",
     "DA" => array(
       'CONF' => "mods:originInfo[@eventType = 'conference']/mods:dateOther[@type = 'conferenceDate']",
       'CPAPER' => "mods:originInfo/mods:dateOther[@type = 'conferenceDate']",
+ /*   '_aux' => "mods:originInfo/mods:dateIssued",		*/
     ),
  // "DB" => "Name of Database",
     "DO" => "mods:identifier[@type = 'doi']",
@@ -65,7 +68,7 @@ function bibutils_ris_field_map_feb21() {
     "J2" => "mods:relatedItem[@type = 'host']/mods:titleInfo[@type='abbreviated']/mods:title",
     "KW" => array(
       'MGZN' => "mods:subject or mods:topic",
-      '_any' => "mods:note[@type = 'keywords']",
+      '_aux' => "mods:note[@type = 'keywords']",
 	),
  // "L1" => "File Attachments (this is a link to a local file on the users system not a URL link)",
  // "L4" => "Figure (this is also meant to be a link to a local file on the users's system and not a URL link)",
@@ -74,6 +77,7 @@ function bibutils_ris_field_map_feb21() {
     "M1" => "mods:relatedItem[@type = 'series']/mods:titleInfo/mods:partNumber", /* see also T3 */
     "M3" => array(
       'THES' => "mods:genre", /* only for THESis type, other publications types won't get this */
+      '_aux' => "mods:note[@type = 'type of work']",
 	),
  // "N1" => "Notes",
  // "NV" => "Number of Volumes",
@@ -82,50 +86,39 @@ function bibutils_ris_field_map_feb21() {
       'CHAP' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",
       'THES' => "mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'Degree grantor']/mods:namePart",
-      '_any' => "mods:originInfo/mods:publisher",
+      '_aux' => "mods:originInfo/mods:publisher",
 	),
-    "PY" => "mods:originInfo/mods:dateIssued",
     "RI" => "mods:note[@type = 'peer reviewed']",
  // "RN" => "Research Notes",
  // "RP" => "Reprint Edition",
  // "SE" => "Section",
     "SN" => "mods:identifier[@type = 'issn' or @type = 'isbn']",
-    "SP" => array(
+    "SP" => array(		/* see https://www.wiki.lib4ri.ch/pages/viewpage.action?pageId=21889177 */
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
+      'CHAP' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
       'JOUR' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
       'MGZN' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
-      'CHAP' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
       '_any' => "mods:physicalDescription/mods:extent[starts-with(@unit, 'page')]",
+      '_aux' => "mods:relatedItem[@type='host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
 	),
-    "EP" => array(
-      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
-      'JOUR' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
-      'MGZN' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
-      'CHAP' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
-      /* see https://www.wiki.lib4ri.ch/pages/viewpage.action?pageId=21889177 */
-	),
+    "EP" => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
  // "ST" => "Short Title",
     "T2" => array(
       'CONF' => "mods:name[@type = 'conference']",
-      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",
-      '_any' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",
+      '_aux' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",	/* typical for 'CPAPER' */
     ),
     "T3" => array(
       'CHAP' => "mods:relatedItem[@type = 'host']/mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:relatedItem[@type = 'series']/mods:titleInfo[not(@type)]/mods:title",
-      '_any' => "mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",
+      '_aux' => "mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",
 	),
  // "TA" => "Translated Author",
-    "TI" => "mods:titleInfo/mods:title",
  // "TT" => "Translated Title",
     "UR" => "mods:identifier[@type = 'uri']",
-    "VL" => array(
-      'THES' => "mods:note[@type = 'academic title']/mods:part/mods:detail[@type = 'volume']/mods:number",	/* re-ask Jochen */
-      '_any' => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",	/* usually for VOLUME !? */
-	),
+    "VL" => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",
     "SV" => array(
       'CHAP' => "mods:relatedItem[@type='host']/mods:relatedItem[@type = 'series']/mods:titleInfo/mods:partNumber",
-      'CPAPER' => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",
+      '_aux' => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number", /* typical for 'CPAPER' */
 	),
  // "Y2" => "Access Date",
     "ED" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",

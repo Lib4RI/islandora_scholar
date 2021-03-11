@@ -356,10 +356,8 @@ class RIS {
               $xPath = $xData[$type_record];
             } elseif ( @!empty($xData['_any']) ) {
               $xPath = $xData['_any'];
-		    } else {
-              continue;
             }
-            if ( !( $data = $mods_record->xpath($xpath) ) ) {
+            if ( !( $data = $mods_record->xpath($xpath) ) || empty(reset($data)) ) {
               if ( is_array($xData) && @!empty($xData['_aux']) ) {
                 $data = $mods_record->xpath($xData['_aux']);
               }
@@ -371,10 +369,10 @@ class RIS {
                 $this->renderName($data[$key], $field);
               }
               elseif ($field == "DA") { // for date issued
-                $value = rtrim( $this->getDate($value), '.');
+                $value = rtrim( $this->getDate($value), '/:-,.');
               }
               elseif ($field == "PY") { // = publishing year
-                $value = rtrim( $this->getYear($value), '.');
+                $value = rtrim( $this->getYear($value), '/:-,.');
               }
 
               if (!empty($value)) {
