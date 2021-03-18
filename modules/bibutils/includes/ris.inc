@@ -5,7 +5,7 @@
  * Class for converting MODS to RIS
  *
  * @author Nelson Hart <nelson@discoverygarden.ca>
- * @date Sept 10, 2012
+ * @date Sept 10, 2012 / https://github.com/Islandora/islandora_scholar/blob/7.x/modules/bibutils/includes/ris.inc
  *
  * @todo Build method for combining multiple nodes into one RIS field that is
  * not repeatable.
@@ -98,6 +98,13 @@ class RIS {
    * @var array
    */
   protected $requiredFields = array( "TY", "ER" );
+
+  /**
+   * Specifies which RIS fields are meant for names, in order to use renderName()
+   *
+   * @var array
+   */
+  protected $nameFields = array("A2", "A3", "A4", "AU", "ED");
 
   /**
    * Specifies which RIS fields are repeatable
@@ -309,7 +316,7 @@ class RIS {
 		// - After each 'author row' there is dot/period added (even if it's not an initial) - not really sure why, however
 		//   Endnote at least seems to be able to handle it correctly.
         $this->text .= $field . "  - " . $family[0] . ( @empty($given[0]) ? '' : ', '.$given[0] ) . ( @strlen($given[0]) == 1 ? '.' : '' ) . "\n";
-        // two spaces in front of the dash!
+        // keep TWO spaces in font of the dash!
       }
     }
   }
@@ -323,63 +330,66 @@ class RIS {
    * @return string
    *   RIS formated text
    */
-  protected function render($mods) {
+  protected function render($mods) { // revised ~2021-03-15/fh, trying to maintain orig. Islandora's code structure where feasible
     $this->text = "";
-    if ($this->map) {
+    if ( $risMapData = $this->map ) {
       $mods_doc = new SimpleXMLElement($mods);
       $mods_doc->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
       $mods_records = $mods_doc->xpath('//mods:mods');
 
       foreach ($mods_records as $mods_record) {
-        $mods_record->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
-        $map_data = $this->map;
-        $type_record = '';
-        if ( @!empty($map_data['TY']) ) { // there always should be a xpath for TYpe though:
-          $data = $mods_record->xpath($map_data['TY']);
-          $type_record = isset($data[0]) ? $this->getType($data[0]) : 'STD';
+        $pubType = ''; // to carry an array value as in this->$types
+        if ( @!empty($risMapData['TY']) ) { // there always should be a xPath for the TYpe though:
+          $dataXml = $mods_record->xpath($risMapData['TY']);
+          $pubType = !empty($dataXml[0]) ? $this->getType($dataXml[0]) : ( isset($dataXml[1]) ? $this->getType($dataXml[1]) : 'STD' );
         }
-        foreach ($map_data as $field => $xData) {
-          if (array_key_exists($field, $this->allowedFields)) {
-            if ($field == "TY") { // required field
-              $this->text .= "{$field}  - {$type_record}\n";
+        foreach ($risMapData as $mapField => $xData) {
+          if (array_key_exists($mapField, $this->allowedFields)) {
+            if ($mapField == "TY") { // required field
+              $this->text .= $mapField . "  - {$pubType}\n"; // keep TWO spaces in font of the dash!
               continue;
             }
-            if ($field == "ER") { // required field
-              $this->text .= "$field  - \n\n\n";
+            if ($mapField == "ER") { // required field
+              $this->text .= $mapField . "  - \n\n\n"; // keep TWO spaces in font of the dash!
               continue;
             }
 
-            $xpath = ''; // to be a string
+            $xPath = ''; // to be a string
             if ( !is_array($xData) ) {
-              $xpath = $xData;
-            } elseif ( @!empty($xData[$type_record]) ) {
-              $xPath = $xData[$type_record];
+              if ( !( $xPath = strval($xData) ) ) {
+                continue;
+              }
+            } elseif ( !empty($pubType) && @!empty($xData[$pubType]) ) {
+              $xPath = $xData[$pubType];
             } elseif ( @!empty($xData['_any']) ) {
               $xPath = $xData['_any'];
+            } else {
+              continue;
             }
-            if ( !( $data = $mods_record->xpath($xpath) ) || empty(reset($data)) ) {
+            if ( !( $dataXml = $mods_record->xpath($xPath) ) || empty(reset($dataXml)) ) {
               if ( is_array($xData) && @!empty($xData['_aux']) ) {
-                $data = $mods_record->xpath($xData['_aux']);
+                if ( !( $dataXml = $mods_record->xpath($xData['_aux']) ) ) {
+                  continue;
+                }
               }
             }
 
-            foreach ($data as $key => $val) {
-              $value = trim($val);
-              if ($field == "AU" || $field == "ED") {
-                $this->renderName($data[$key], $field);
+            foreach ($dataXml as $key => $val) {
+              if (in_array($mapField, $this->nameFields)) {
+                $this->renderName($dataXml[$key], $mapField); // will use/expand $this->text
+              } else {
+                $value = trim($val);
+                if ($mapField == "DA") { // for date issued
+                  $value = rtrim( $this->getDate($value), '/:-,.');
+                }
+                elseif ($mapField == "PY") { // = publishing year
+                  $value = rtrim( $this->getYear($value), '/:-,.');
+                }
+                if (!empty($value)) {
+                  $this->text .= $mapField . "  - $value\n"; // keep TWO spaces in font of the dash!
+                }
               }
-              elseif ($field == "DA") { // for date issued
-                $value = rtrim( $this->getDate($value), '/:-,.');
-              }
-              elseif ($field == "PY") { // = publishing year
-                $value = rtrim( $this->getYear($value), '/:-,.');
-              }
-
-              if (!empty($value)) {
-                $this->text .= "$field  - $value\n";
-              }
-
-              if (!in_array($field, $this->repeatFields)) {
+              if (!in_array($mapField, $this->repeatFields)) {
                 break;
               }
             }

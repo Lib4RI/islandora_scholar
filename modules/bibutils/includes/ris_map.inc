@@ -30,10 +30,10 @@ function bibutils_ris_field_map_feb21() {
     "PY" => "mods:originInfo/mods:dateIssued",
 
     "A2" => array(
-      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
-      '_aux'  => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']/mods:namePart",
+      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
+      '_aux'  => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
  	),
-    "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']/mods:namePart",
+    "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']",
  // "A4" => "Subsidiary Author (each author on its own line preceded by the tag)",
     "AB" => "mods:abstract[not(@displayLabel) or @displayLabel = 'combined-all-export']",
  // "AD" => "Author Address",
@@ -99,7 +99,7 @@ function bibutils_ris_field_map_feb21() {
       'JOUR' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
       'MGZN' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
       '_any' => "mods:physicalDescription/mods:extent[starts-with(@unit, 'page')]",
-      '_aux' => "mods:relatedItem[@type='host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
+      '_aux' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
 	),
     "EP" => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
  // "ST" => "Short Title",
@@ -143,6 +143,7 @@ function bibutils_ris_field_map() {
     global $user;
     foreach( explode(',',$roleList) as $role ) {
       if ( in_array(trim($role),array_values($user->roles)) ) {
+		dpm( "Hello " . $user->name . " - RIS is cool, don't give it up!" );
         return bibutils_ris_field_map_feb21();
       }
 	}
