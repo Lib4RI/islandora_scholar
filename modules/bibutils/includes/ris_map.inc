@@ -23,7 +23,7 @@ function bibutils_ris_field_map_feb21() {
   // XXX: Some comments go past 80 columns... Let's leave 'em be, for now.
   // @codingStandardsIgnoreStart
   return array(
-    "TY" => "mods:genre", /* required field */
+    "TY" => "mods:genre", /* required field, actually the value of this tag will replaced by the RIS type finally */
 
     "TI" => "mods:titleInfo/mods:title",
     "AU" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'author']",
@@ -33,7 +33,10 @@ function bibutils_ris_field_map_feb21() {
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
       '_aux'  => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
  	),
-    "A3" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']",
+    "A3" => array(
+      '_any' => "mods:relatedItem[@type = 'host']/mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']",
+      '_aux' => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'thesis advisor']",
+ 	),
  // "A4" => "Subsidiary Author (each author on its own line preceded by the tag)",
     "AB" => "mods:abstract[not(@displayLabel) or @displayLabel = 'combined-all-export']",
  // "AD" => "Author Address",
@@ -56,9 +59,9 @@ function bibutils_ris_field_map_feb21() {
       '_aux' => "mods:originInfo/mods:place/mods:placeTerm",
     ),       
     "DA" => array(
-      'CONF' => "mods:originInfo[@eventType = 'conference']/mods:dateOther[@type = 'conferenceDate']",
+      'CONF'  => "mods:originInfo[@eventType = 'conference']/mods:dateOther[@type = 'conferenceDate']",
       'CPAPER' => "mods:originInfo/mods:dateOther[@type = 'conferenceDate']",
- /*   '_aux' => "mods:originInfo/mods:dateIssued",		*/
+ /*   '_aux'  => "mods:originInfo/mods:dateIssued",  */    /* see 'PY' tag which takes care about this */
     ),
  // "DB" => "Name of Database",
     "DO" => "mods:identifier[@type = 'doi']",
@@ -67,7 +70,7 @@ function bibutils_ris_field_map_feb21() {
     "IS" => "mods:relatedItem[@type = 'host']/mods:part/mods:detail[@type = 'issue']/mods:number",
     "J2" => "mods:relatedItem[@type = 'host']/mods:titleInfo[@type='abbreviated']/mods:title",
     "KW" => array(
-      'MGZN' => "mods:subject or mods:topic",
+      '_any' => "mods:subject/mods:topic",
       '_aux' => "mods:note[@type = 'keywords']",
 	),
  // "L1" => "File Attachments (this is a link to a local file on the users system not a URL link)",
@@ -83,9 +86,8 @@ function bibutils_ris_field_map_feb21() {
  // "NV" => "Number of Volumes",
  // "OP" => "Original Publication",
     "PB" => array(
-      'CHAP' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",
-      'CPAPER' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",
       'THES' => "mods:name[@type = 'corporate' and mods:role/mods:roleTerm = 'Degree grantor']/mods:namePart",
+      '_any' => "mods:relatedItem[@type = 'host']/mods:originInfo/mods:publisher",		/* typical for 'CHAP' + 'CPAPER' */
       '_aux' => "mods:originInfo/mods:publisher",
 	),
     "RI" => "mods:note[@type = 'peer reviewed']",
@@ -112,7 +114,7 @@ function bibutils_ris_field_map_feb21() {
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:relatedItem[@type = 'series']/mods:titleInfo[not(@type)]/mods:title",
       '_aux' => "mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",
 	),
- // "TA" => "Translated Author",
+ // "TA" => "Translated Author",	/* depending on the xPath you may need to enable this also in ris.inc/$nameFields */
  // "TT" => "Translated Title",
     "UR" => "mods:identifier[@type = 'uri']",
     "VL" => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",
@@ -125,7 +127,7 @@ function bibutils_ris_field_map_feb21() {
     // ID added at export time for getting PID.
     "ID" => "mods:identifier[@type = 'id export']",
 
-    "ER" => "",	/* Required field to mark the end of a data set of one publication */
+    "ER" => "",	/* Required field to mark the END of a data set of one publication */
   );
   // @codingStandardsIgnoreEnd
 }
@@ -136,14 +138,14 @@ function bibutils_ris_field_map() {
 	
   // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
   if ( function_exists('bibutils_ris_field_map_feb21') ) {	 // TEST/fh Feb 2021
-    $roleList = variable_get('lib4ri_ris_feb2021','repo manager, administrator');
-	if ( empty($roleList) || trim($roleList) == 'all' ) {
+    $roleList = trim( variable_get('lib4ri_ris_feb2021','repo manager, administrator') );
+	if ( empty($roleList) || strchr('all|ok',$roleList) ) {
       return bibutils_ris_field_map_feb21();
     }
     global $user;
     foreach( explode(',',$roleList) as $role ) {
       if ( in_array(trim($role),array_values($user->roles)) ) {
-		dpm( "Hello " . $user->name . " - RIS is cool, don't give it up!" );
+		dpm( "Hello " . $user->name . " - Isn't RIS cool? So don't give it up!" );
         return bibutils_ris_field_map_feb21();
       }
 	}

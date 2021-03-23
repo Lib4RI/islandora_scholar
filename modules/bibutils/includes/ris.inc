@@ -104,7 +104,7 @@ class RIS {
    *
    * @var array
    */
-  protected $nameFields = array("A2", "A3", "A4", "AU", "ED");
+  protected $nameFields = array("A2", "A3", "A4", "AU", "ED" /* , "TA" */ );
 
   /**
    * Specifies which RIS fields are repeatable
@@ -306,17 +306,19 @@ class RIS {
   protected function renderName($names, $field) {
     if (!empty($field)) {
       $names->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
-      $given  = $names->xpath(variable_get('islandora_scholar_xpaths_given', 'mods:namePart[@type = "given" ]'));
-      $family = $names->xpath(variable_get('islandora_scholar_xpaths_family', 'mods:namePart[@type = "family"]'));
-      if ( /* !empty($given[0]) && */ !empty($family[0])) { // there always should be a given name though
-		// 2020-09-07/fh:
-		// - Based on short tests Endnote only supports/shows the *first* author in a nice way if there is no given name,
-		//   further authors listed in Endnote will then however have an unneeded comma attached if they have no given name.
-		// - If the given name is just a single letter, Endnote will automatically attach a dot/period if missing.
-		// - After each 'author row' there is dot/period added (even if it's not an initial) - not really sure why, however
-		//   Endnote at least seems to be able to handle it correctly.
-        $this->text .= $field . "  - " . $family[0] . ( @empty($given[0]) ? '' : ', '.$given[0] ) . ( @strlen($given[0]) == 1 ? '.' : '' ) . "\n";
-        // keep TWO spaces in font of the dash!
+      $xTmp = $names->xpath(variable_get('islandora_scholar_xpaths_family', 'mods:namePart[@type = "family"]'));
+      $family = trim($xTmp[0]);
+      if ( !empty($family) ) { // there always should be a given name though
+        $xTmp = $names->xpath(variable_get('islandora_scholar_xpaths_given', 'mods:namePart[@type = "given" ]'));
+        $given = trim($xTmp[0]);
+        // 2020-09-07/fh:
+        // - Based on short tests: if there is no given name in our MODS then Endnote only supports/shows the *first* author in a nice way,
+        //   further authors listed in Endnote will then however have an unneeded comma attached if they have no given name.
+        // - If the given name is just a single letter, Endnote will automatically attach a dot/period if missing. Other tools may not.(?)
+        // - After each 'author row' there is dot/period added (even if it's not an initial) - not really sure why, however
+        //   Endnote at least seems to be able to handle it correctly.
+        // Trying to tune this now... - keep TWO spaces in font of the dash!
+        $this->text .= $field . "  - " . $family . ( @empty($given) ? '' : ', '.$given ) . ( @strlen($given) == 1 ? '.' : '' ) . "\n";
       }
     }
   }
