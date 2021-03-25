@@ -106,8 +106,8 @@ function bibutils_ris_field_map_feb21() {
     "EP" => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:end",
  // "ST" => "Short Title",
     "T2" => array(
-      'CONF' => "mods:name[@type = 'conference']",
-      '_aux' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",	/* typical for 'CPAPER' */
+      '_any' => "mods:name[@type = 'conference']",			/* typical for 'CONF' + 'CPAPER' */
+      '_aux' => "mods:relatedItem[@type = 'host']/mods:titleInfo[not(@type)]/mods:title",
     ),
     "T3" => array(
       'CHAP' => "mods:relatedItem[@type = 'host']/mods:relatedItem[@type = 'series']/mods:titleInfo/mods:title",

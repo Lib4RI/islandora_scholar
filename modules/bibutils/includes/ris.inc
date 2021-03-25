@@ -261,16 +261,17 @@ class RIS {
    * @return string
    *   RIS date
    */
-  protected function getDate($mods_date) {
-    $return = "";
-    if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $mods_date) || preg_match('/^[0-9]{4}-[0-9]{2}$/', $mods_date) || preg_match('/^[0-9]{4}$/', $mods_date)) {
-      preg_match_all('/-/', $mods_date, $dashes);
-      $return = str_replace("-", "/", $mods_date);
-      for ($i = count($dashes[0]); $i <= 2; $i++) {
-        $return .= "/";
+  protected function getDate($mods_date) {		// feb-2021/fh revised for flexibility + speed
+    $mods_date = trim($mods_date);
+    if ( !intval($mods_date) || strpos(strtr($mods_date,'- /.:',',,,,,'),',') || !preg_match('/^[0-9]{4}$/',$mods_date) ) {
+      $dateTmp = preg_replace('/\-\d{1,2}\w{0,2},/',',',$mods_date);	// from "March 12-15th, 2019" just to "March 12, 2019"
+      if ( $timeInt = strtotime($dateTmp) ) {
+        return date("Y/m/d",$timeInt);	// for "YYYY/MM/DD", see https://en.wikipedia.org/wiki/RIS_(file_format)
       }
     }
-    return $return;
+    // Right now we return what we have got. Using only "YYYY" is OK (too) for EndNote + Zotero.
+    // To ensure "YYYY/00/00" e.g. use: implode('/',array_pad(explode('/',$mods_date),3,'00'));
+    return $mods_date;
   }
 
   /**
