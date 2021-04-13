@@ -252,26 +252,91 @@ class RIS {
     return isset($this->types[$type]) ? $this->types[$type] : "STD";
   }
 
+  /*
+   * Function to render a date string in a RIS compliant way as good as possible.
+   * 
+   * See function getDate() below to get an overview what RIS compliance means.
+   * It is tuned to deal with conference periods. Probable RIS compliant output may look like: "2019/03/12/ until /2019/04/15"
+   */
+  protected function getDateCustom($mods_date, $strict = 2, $format = "Y/m/d") {    // feb-2021/fh revised for flexibility+speed
+    $mods_date = trim($mods_date,".:;/- \n\r\t\v\0");
+    if ( intval($mods_date) && preg_match('/^[0-9]{4}$/',$mods_date) ) {
+      return $mods_date;  // this is just the year
+    }
+    if ( $timeInt = strtotime($mods_date) ) {  // should also deal with e.g. '2019-03-15'
+      return date($format,$timeInt);  // for "YYYY/MM/DD", see https://en.wikipedia.org/wiki/RIS_(file_format)
+    }
+    if ( count(explode('-',$mods_date)) != 2 ) {  // only stay here with *1* dash
+      return $mods_date;  // bail out with any value - bad, but no concept for this
+    }
+
+    // Timespan care for "March 12-15th, 2019" or "March 12nd - April 27, 2019" or maybe even "2019, March 12-15th"
+    $dateTmp = strtr($mods_date,".:;/,\t","      "); // so we just need to deal with space as separator
+    $dateYear = '';
+    if ( preg_match('/^[0-9]{4}\s+/', $dateTmp) ) {
+      $dateYear = substr($dateTmp,0,4);
+      $dateTmp = ltrim(substr($dateTmp,4),' ');
+    } elseif ( preg_match('/\s+[0-9]{4}$/', $dateTmp)) {
+      $dateYear = substr($dateTmp,-4);
+      $dateTmp = rtrim(substr($dateTmp,0,-4),' ');
+    } else {
+      return $mods_date;  // bail out with any value - bad, but no concept for this
+    }
+    $spanAry = array('','');  // to hold start and end date
+    if ( preg_match('/\w{3,}\s*\d{1,2}\w{0,2}\s*\-\s*\w{3,}\s*\d{1,2}\w{0,2}/',$dateTmp) ) { // to find "March 12nd - April 27"
+      $spanAry[0] = rtrim(strtok($dateTmp,'-'),' ');
+      $spanAry[1] = ltrim(strchr($dateTmp,'-'),' -');
+    }
+    elseif ( preg_match('/\w{3,}\s*\d{1,2}\w{0,2}\s*\-\s*\d{1,2}\w{0,2}/',$dateTmp) ) { // to find "March 12 - 15th"
+      $spanAry[0] = rtrim(strtok($dateTmp,'-'),' ');
+      $spanAry[1] = preg_replace('/\s*\d{1,2}\w{0,2}\s*\-\s*/',' ',$dateTmp); // removing "12 - " to get "March 15th"
+    }
+    foreach( $spanAry as $dIdx => $dTmp ) {
+      if ( empty($dTmp) || !( $timeInt = strtotime($dTmp.', '.$dateYear) ) ) {
+        return $mods_date;  // bail out with any value - bad, but no concept for this
+      }
+      $spanAry[$dIdx] = date($format,$timeInt);
+    }
+    return ( ( !intval($spanAry[0]) && $strict > 4 ) ? '' : ( $spanAry[0] . '/ until /' . $spanAry[1] ) );
+  }
+
   /**
    * Get the RIS date format of a standard data format.
    *
    * @param string $mods_date
-   *   Format can be: YYYY-MM-DD or YYYY-MM or YYYY
+   *   Dates must be in the following format:   * YYYY/MM/DD/other info
+   *
+   *   The year, month and day fields are all numeric. The other info field can be any string of letters, spaces and hyphens.
+   *
+   *   Note that each specific date information is optional, however the slashes (“/”) are not.
+   *   For example, if you just had the <year> and <other info>, then the output would look like: “1993///Spring.”
+   *
+   *   Date information should be set forth in the following format:
+   *   YYYY or
+   *   YYYY/MM or
+   *   YYYY/MM/DD or
+   *   YYYY/MM/DD/other info
    *
    * @return string
    *   RIS date
    */
-  protected function getDate($mods_date) {		// feb-2021/fh revised for flexibility + speed
-    $mods_date = trim($mods_date);
+  protected function getDate($mods_date, $strict = 1, $format = "Y/m/d") {		// mar-2021/fh revised for flexibility, relying on PHP's strtotime() + date() functions
+    if ( $strict == 2 ) {
+      return $this->getDateCustom($mods_date, $strict, $format);
+    }
+    $mods_date = trim($mods_date,".:;/- \n\r\t\v\0");
     if ( !intval($mods_date) || strpos(strtr($mods_date,'- /.:',',,,,,'),',') || !preg_match('/^[0-9]{4}$/',$mods_date) ) {
-      $dateTmp = preg_replace('/\-\d{1,2}\w{0,2},/',',',$mods_date);	// from "March 12-15th, 2019" just to "March 12, 2019"
+      // so $mods_date is not just a year number:
+      $dateTmp = $mods_date;
+      if ( $strict > 1 && strpos($dateTmp,'-') && strpos($dateTmp,',') ) { // try:
+        $dateTmp = preg_replace('/\s*\-\s*\d{1,2}\w{0,2},/',',',$dateTmp);	// from "March 12-15th, 2019" just to "March 12, 2019"
+        $dateTmp = preg_replace('/\s*\-\s*\w{3,}\s*\d{1,2}\w{0,2},/',',',$dateTmp);	// from "March 12 - April 27, 2019" just to "March 12, 2019"
+      }
       if ( $timeInt = strtotime($dateTmp) ) {
-        return date("Y/m/d",$timeInt);	// for "YYYY/MM/DD", see https://en.wikipedia.org/wiki/RIS_(file_format)
+        return date($format,$timeInt);	// for "YYYY/MM/DD", see https://en.wikipedia.org/wiki/RIS_(file_format)
       }
     }
-    // Right now we return what we have got. Using only "YYYY" is OK (too) for EndNote + Zotero.
-    // To ensure "YYYY/00/00" e.g. use: implode('/',array_pad(explode('/',$mods_date),3,'00'));
-    return $mods_date;
+    return ( ( !intval($mods_date) && $strict > 4 ) ? '' : $mods_date );
   }
 
   /**
@@ -283,12 +348,8 @@ class RIS {
    * @return string
    *   RIS Year
    */
-  protected function getYear($mods_date) {
-    $return = "";
-    if (preg_match('/^[0-9]{4}/', $mods_date, $year)) {
-      $return = $year[0];
-    }
-    return $return;
+  protected function getYear($mods_date, $strict = 2, $format = "Y") {
+    return $this->getDate($mods_date, $strict, $format);
   }
 
   /**
@@ -336,6 +397,7 @@ class RIS {
   protected function render($mods) { // revised ~2021-03-15/fh, trying to maintain orig. Islandora's code structure where feasible
     $this->text = "";
     if ( $risMapData = $this->map ) {
+      $date_strict = variable_get('islandora_scholar_ris_date_strict',0);
       $mods_doc = new SimpleXMLElement($mods);
       $mods_doc->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
       $mods_records = $mods_doc->xpath('//mods:mods');
@@ -381,12 +443,12 @@ class RIS {
               if (in_array($mapField, $this->nameFields)) {
                 $this->renderName($dataXml[$key], $mapField); // will use/expand $this->text
               } else {
-                $value = trim($val);
-                if ($mapField == "DA") { // for date issued
-                  $value = rtrim( $this->getDate($value), '/:-,.');
+                $value = is_string($val) ? trim($val) : @trim($val[0]);
+                if ($mapField == "PY") { // = publishing year
+                  $value = rtrim( $this->getYear($value,$date_strict), '/:-,.');
                 }
-                elseif ($mapField == "PY") { // = publishing year
-                  $value = rtrim( $this->getYear($value), '/:-,.');
+                elseif ($mapField == "DA" && $date_strict > 0) { // = date issued, option to block it (with 0) to respond on Jochen's phone call from 2021-04-13
+                  $value = rtrim( $this->getDate($value,$date_strict), '/:-,.');
                 }
                 if (!empty($value)) {
                   $this->text .= $mapField . "  - $value\n"; // keep TWO spaces in font of the dash!

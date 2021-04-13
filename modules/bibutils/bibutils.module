@@ -24,7 +24,7 @@ function bibutils_menu() {
   $items = array();
 
   $items['admin/islandora/solution_pack_config/scholar/bibutils'] = array(
-    'title' => 'Bibutils',
+    'title' => 'Bibutils/RIS',
     'description' => 'Configure bibutils executable paths.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bibutils_admin_form'),

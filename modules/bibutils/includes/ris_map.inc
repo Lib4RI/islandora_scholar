@@ -58,14 +58,18 @@ function bibutils_ris_field_map_feb21() {
       'CONF' => "mods:originInfo[@eventType = 'conference']/mods:place/mods:placeTerm",
       '_aux' => "mods:originInfo/mods:place/mods:placeTerm",
     ),       
-    "DA" => array(
+    "DA" => array(		/* conference date may be restricted by variable_get('islandora_scholar_ris_date_strict',0) */
       'CONF'  => "mods:originInfo[@eventType = 'conference']/mods:dateOther[@type = 'conferenceDate']",
       'CPAPER' => "mods:originInfo/mods:dateOther[@type = 'conferenceDate']",
  /*   '_aux'  => "mods:originInfo/mods:dateIssued",  */    /* see 'PY' tag which takes care about this */
     ),
  // "DB" => "Name of Database",
-    "DO" => "mods:identifier[@type = 'doi']",
  // "DP" => "Database Provider",
+    "DO" => "mods:identifier[@type = 'doi']",
+    "SN" => array(
+		'_any' => "mods:relatedItem[@type='host']/mods:identifier[@type = 'isbn' or ends-with(@type, 'issn')]",	/* typical for 'Journal Artictle' + 'Mag or Newsp. Articles' */
+		'_aux' => "mods:identifier[@type = 'isbn' or ends-with(@type, 'issn')]",
+	),
     "ET" => "mods:originInfo/mods:edition",
     "IS" => "mods:relatedItem[@type = 'host']/mods:part/mods:detail[@type = 'issue']/mods:number",
     "J2" => "mods:relatedItem[@type = 'host']/mods:titleInfo[@type='abbreviated']/mods:title",
@@ -94,7 +98,6 @@ function bibutils_ris_field_map_feb21() {
  // "RN" => "Research Notes",
  // "RP" => "Reprint Edition",
  // "SE" => "Section",
-    "SN" => "mods:identifier[@type = 'issn' or @type = 'isbn']",
     "SP" => array(		/* see https://www.wiki.lib4ri.ch/pages/viewpage.action?pageId=21889177 */
       'CPAPER' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
       'CHAP' => "mods:relatedItem[@type = 'host']/mods:part/mods:extent[starts-with(@unit, 'page')]/mods:start",
@@ -116,7 +119,10 @@ function bibutils_ris_field_map_feb21() {
 	),
  // "TA" => "Translated Author",	/* depending on the xPath you may need to enable this also in ris.inc/$nameFields */
  // "TT" => "Translated Title",
-    "UR" => "mods:identifier[@type = 'uri']",
+    "UR" => array(
+		'_any' => "mods:identifier[@type = 'uri']",			/* according to Jochen's phone call from 2021-04-13 */
+		'_aux' => "mods:relatedItem[@type = 'host']/mods:identifier[@type = 'uri']",	/* wrong/auxiliary place actually */
+	),
     "VL" => "mods:relatedItem[@type='host']/mods:part/mods:detail[@type = 'volume']/mods:number",
     "SV" => array(
       'CHAP' => "mods:relatedItem[@type='host']/mods:relatedItem[@type = 'series']/mods:titleInfo/mods:partNumber",
@@ -124,8 +130,7 @@ function bibutils_ris_field_map_feb21() {
 	),
  // "Y2" => "Access Date",
     "ED" => "mods:name[@type = 'personal' and mods:role/mods:roleTerm = 'editor']",
-    // ID added at export time for getting PID.
-    "ID" => "mods:identifier[@type = 'id export']",
+    "ID" => "mods:identifier[@type = 'id export']",		/* ID added at export time for getting PID */
 
     "ER" => "",	/* Required field to mark the END of a data set of one publication */
   );
@@ -137,7 +142,7 @@ function bibutils_ris_field_map_feb21() {
 function bibutils_ris_field_map() {
 	
   // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  if ( function_exists('bibutils_ris_field_map_feb21') ) {	 // TEST/fh Feb 2021
+  if ( function_exists('bibutils_ris_field_map_feb21') ) {	 // TEST/fh Feb 2021 - TO BE REMOVED LATER
     $roleList = trim( variable_get('lib4ri_ris_feb2021','repo manager, administrator') );
 	if ( empty($roleList) || strchr('all|ok',$roleList) ) {
       return bibutils_ris_field_map_feb21();
