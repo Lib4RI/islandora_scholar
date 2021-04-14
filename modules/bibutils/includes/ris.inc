@@ -258,7 +258,7 @@ class RIS {
    * See function getDate() below to get an overview what RIS compliance means.
    * It is tuned to deal with conference periods. Probable RIS compliant output may look like: "2019/03/12/ until /2019/04/15"
    */
-  protected function getDateCustom($mods_date, $strict = 2, $format = "Y/m/d") {    // feb-2021/fh revised for flexibility+speed
+  protected function getDateCustom($mods_date, $strict = 2, $format = "Y/m/d") {    // 2021-02-15/fh revised for flexibility+speed
     $mods_date = trim($mods_date,".:;/- \n\r\t\v\0");
     if ( intval($mods_date) && preg_match('/^[0-9]{4}$/',$mods_date) ) {
       return $mods_date;  // this is just the year
@@ -408,7 +408,7 @@ class RIS {
           $dataXml = $mods_record->xpath($risMapData['TY']);
           $pubType = !empty($dataXml[0]) ? $this->getType($dataXml[0]) : ( isset($dataXml[1]) ? $this->getType($dataXml[1]) : 'STD' );
         }
-        foreach ($risMapData as $mapField => $xData) {
+        foreach ($risMapData as $mapField => $xData) {	// $xData is a string or an array (with strings)
           if (array_key_exists($mapField, $this->allowedFields)) {
             if ($mapField == "TY") { // required field
               $this->text .= $mapField . "  - {$pubType}\n"; // keep TWO spaces in font of the dash!
@@ -431,7 +431,7 @@ class RIS {
             } else {
               continue;
             }
-            if ( !( $dataXml = $mods_record->xpath($xPath) ) || empty(reset($dataXml)) ) {
+            if ( !( $dataXml = $mods_record->xpath($xPath) ) /* || empty(reset($dataXml)) may return a 'false positive' with current data type! */ ) {
               if ( is_array($xData) && @!empty($xData['_aux']) ) {
                 if ( !( $dataXml = $mods_record->xpath($xData['_aux']) ) ) {
                   continue;
