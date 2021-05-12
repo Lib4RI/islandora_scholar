@@ -132,11 +132,18 @@ function _citation_exporter_batch_append_citations_to_text_file(array $pids, $fi
 function citation_exporter_batch_convert_txt_to_rtf($filename, array &$context) {
   module_load_include('inc', 'citation_exporter', 'includes/rtf');
   $text = file_get_contents($filename);
-  // XXX: Strip out tags.
-  $text = filter_xss($text, array('br', 'i', 'b'));
+  // According to Jour Fixe 2021-05-05: <br> tag as line-break + reducing double-space
+
+  // XXX: Strip out tags. Note, filter_xss will keep '<br>' (but turn '<br/>' into '<br />)
+  $text = str_replace( '<br>', '<br />', filter_xss($text, array('br', 'i', 'b')) );
+  $pos = 0;
+  while( $pos = strpos($text,'  ',$pos) ) { // removing double-spaces
+    $text = substr($text,0,$pos) . substr($text,$pos+1);
+  }
+  $text = str_replace( '<br /> ', '<br />', $text ); //	ensure no space	after line-break
 
   $rtf = new RTF();
-  $rtf->addText($text);
+  $rtf->addText($text);		// only '<br />' will become a line-break in the RTF file
   /* File */
   $temp_file_dir = file_directory_temp();
   $temp_file_name = file_create_filename("export.rtf", $temp_file_dir);

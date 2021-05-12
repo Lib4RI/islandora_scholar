@@ -54,8 +54,16 @@ function citation_exporter_batch_get_pdf_operations(array $pids, $style) {
 function citation_exporter_batch_convert_text_to_pdf($filename, array &$context) {
   module_load_include('inc', 'citation_exporter', 'includes/pdf');
   $text = file_get_contents($filename);
-  // XXX: Strip out tags.
-  $text = filter_xss($text, array('br', 'i', 'b'));
+  // According to Jour Fixe 2021-05-05: <br> tag as line-break + reducing double-space
+
+  // XXX: Strip out tags. Note, filter_xss will keep '<br>' (but turn '<br/>' into '<br />)
+  $text = str_replace( '<br>', '<br />', filter_xss($text, array('br', 'i', 'b')) );
+  $pos = 0;
+  while( $pos = strpos($text,'  ',$pos) ) { // removing double-spaces
+    $text = substr($text,0,$pos) . substr($text,$pos+1);
+  }
+  $text = str_replace( '<br /> ', '<br />', $text ); //	ensure no space	after line-break
+
   $temp_file_dir = file_directory_temp();
   $temp_file = file_create_filename("pdf_export.pdf", $temp_file_dir);
   citation_exporter_create_pdf($text, $temp_file);
